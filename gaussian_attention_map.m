@@ -13,13 +13,22 @@ function gaussian_attention_map(x, y, sigma, varargin)
 %		 of fixation area. 
 %   - minT - minimal fixation duration, scalar. Required if t is specified, normalises t
 %		- presentedImage - background image. Optional, if specified, it is overlayed with attention area.
-%		- roiRect - coordinates of presentedImage in the coordinate system of
-%		fixations.  Required if presentedImage is specified
+%		- roiRect - coordinates of presentedImage in the coordinate system of fixations. 
+%		4-element vector in format [left top width height]. Required if presentedImage is specified
 % OUTPUT:
 %   - 
 %
 % EXAMPLE of use 
-% imshow(finalImage, refFinalImage)
+% fixationDetector = struct('method', 'dispersion-based', ...
+%                          'dispersionThreshold', 30, ...
+%                          'durationThreshold', 120);
+% imageRect = [imageLeft imageTop imageWidth imageHeight]
+% originalImage = imread('stimulImage.png');
+% scaledImage = imresize(originalImage,[imageHeight imageWidth]); 
+% %get fixation data in x, y, t
+% figure
+% gaussian_attention_map(x, y, fixationDetector.dispersionThreshold/2, t, 
+%                              fixationDetector.durationThreshold, scaledImage, imageRect);      
 %
 
   nVarargs = length(varargin);
@@ -65,28 +74,27 @@ function gaussian_attention_map(x, y, sigma, varargin)
     end
   end 
  
- % create fixationMap as a set of gaussian distributed values 
- % centered in x,y, having expectation intensity and std sigma  
- fullImageHeight = ceil(maxY - minY);
- fullImageWidth = ceil(maxX - minX); 
- fixationCentresMap = zeros(fullImageHeight, fullImageWidth); 
- ix = round(x - minX) + 1;
- iy = round(y - minY) + 1;   
- fixationCentresMap(sub2ind(size(fixationCentresMap), iy, ix)) = intensity;
- fixationMap = imgaussfilt(fixationCentresMap, sigma, 'FilterSize', 2*ceil(3*sigma)+1);
+  % create fixationMap as a set of gaussian distributed values 
+  % centered in x,y, having expectation intensity and std sigma  
+  fullImageHeight = ceil(maxY - minY);
+  fullImageWidth = ceil(maxX - minX); 
+  fixationCentresMap = zeros(fullImageHeight, fullImageWidth); 
+  ix = round(x - minX) + 1;
+  iy = round(y - minY) + 1;   
+  fixationCentresMap(sub2ind(size(fixationCentresMap), iy, ix)) = intensity;
+  fixationMap = imgaussfilt(fixationCentresMap, sigma, 'FilterSize', 2*ceil(3*sigma)+1);
 
- %create transparencyMap from fixationMap
- maxTransperentValue = 2/3;
- transparencyMap = maxTransperentValue*fixationMap;
- transparencyMap(fixationMap > 1) = maxTransperentValue;
- 
- % create fixationMap image from mapImage
- fixationMap(fixationMap > 2.56) = 2.56; 
- %fixationImage = ind2rgb(uint8(100*fixationMap), jet(256));
- fixationImage = ind2rgb(uint8(100*fixationMap), parula(256));
- refFinalImage = imref2d(size(fixationMap));
- refFinalImage.XWorldLimits = [minX maxX];
- refFinalImage.YWorldLimits = [minY maxY];
+  %create transparencyMap from fixationMap
+  maxTransperentValue = 2/3;
+  transparencyMap = maxTransperentValue*fixationMap;
+  transparencyMap(fixationMap > 1) = maxTransperentValue;
+
+  % create fixationMap image from mapImage
+  fixationMap(fixationMap > 2.56) = 2.56; 
+  fixationImage = ind2rgb(uint8(100*fixationMap), parula(256));
+  refFinalImage = imref2d(size(fixationMap));
+  refFinalImage.XWorldLimits = [minX maxX];
+  refFinalImage.YWorldLimits = [minY maxY];
 
   if (doOverlay)    
     %copy presented image to the full size canvas    
@@ -103,12 +111,11 @@ function gaussian_attention_map(x, y, sigma, varargin)
     set(h, 'AlphaData', transparencyMap) 
     
     %draw fixations using overlay
-    %[finalImage, refFinalImage] = imfuse(mapImage, refMapImage, presentedImage, refPresentedImage, 'falsecolor', 'ColorChannels', [1 2 2]);
+    %[finalImage, refFinalImage] = imfuse(fixationImage, refFinalImage, fullImage, refFinalImage, 'falsecolor', 'ColorChannels', [1 2 2]);
     %imshow(finalImage, refFinalImage);
   else
     imshow(fixationImage, refFinalImage);
   end  
 end
-%figure; imshow(mapImage, refMapImage)
-%figure; imshow(presentedImage, refPresentedImage)
+
 
