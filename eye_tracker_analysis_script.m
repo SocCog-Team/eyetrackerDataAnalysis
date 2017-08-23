@@ -44,7 +44,7 @@ mouthRect = [115, 280, 150, 50; ...
 mouthRect(:, 1) = mouthRect(:, 1) + imageLeft;     
 mouthRect(:, 2) = mouthRect(:, 2) + imageTop;
 
-
+pValue = 0.05;
 
 fixationDetector = struct('method', 'dispersion-based', ...
                           'dispersionThreshold', 30, ...
@@ -58,7 +58,7 @@ fixationDetector = struct('method', 'dispersion-based', ...
 analyse_initial_fixation(trial, fixationDetector, screenRect, fixPointRect);
 
 % plot gaze results for stimuli
-[stimulStat, scrambledStat] = analyse_stimul_fixation(trial, trialStruct, stimulImage, fixationDetector, ...
+[stimulStat, scrambledStat] = analyse_stimul_fixation(trial, trialStruct, pValue, stimulImage, fixationDetector, ...
                                                   screenRect, imageRect, eyesRect, mouthRect);
 % final statistic
 show_fixation_report(stimulName, stimulStat, scrambledStat);
@@ -78,7 +78,7 @@ specStimulImage = [stimulImage, stimulImage, stimulImage];
 
 %% analyse trials grouped by presented image  
 % plot gaze results for stimuli
-[specStimulStat, specScrambledStat] = analyse_stimul_fixation(specTrial, specTrialStruct, specStimulImage, fixationDetector, ...
+[specStimulStat, specScrambledStat] = analyse_stimul_fixation(specTrial, specTrialStruct, pValue, specStimulImage, fixationDetector, ...
                                                   screenRect, imageRect, specEyesRect, specMouthRect);
 % final statistic
 show_fixation_report(specStimulName, specStimulStat, specScrambledStat);
@@ -126,8 +126,8 @@ normStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face
 
 %% analyse for normal stimuli only       
 % plot gaze results for stimuli
-[normStimulStat, normScrambledStat] = analyse_stimul_fixation(normTrial, normTrialStruct, stimulImage, fixationDetector, ...
-                                                  screenRect, imageRect, eyesRect, mouthRect);
+[normStimulStat, normScrambledStat] = analyse_stimul_fixation(normTrial, normTrialStruct, pValue, ...
+                                        stimulImage, fixationDetector, screenRect, imageRect, eyesRect, mouthRect);
 % final statistic
 show_fixation_report(normStimulName, normStimulStat, normScrambledStat);
 

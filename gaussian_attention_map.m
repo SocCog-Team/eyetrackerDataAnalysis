@@ -13,8 +13,8 @@ function gaussian_attention_map(x, y, sigma, varargin)
 %		 of fixation area. 
 %   - minT - minimal fixation duration, scalar. Required if t is specified, normalises t
 %		- presentedImage - background image. Optional, if specified, it is overlayed with attention area.
-%		- roiRect - coordinates of presentedImage in the coordinate system of fixations. 
-%		4-element vector in format [left top width height]. Required if presentedImage is specified
+%		- roiRect - rectangle describing presentedImage location in the coordinate system of fixations.
+%		  4-element vector in format [left top width height]. Required if presentedImage is specified
 % OUTPUT:
 %   - 
 %
