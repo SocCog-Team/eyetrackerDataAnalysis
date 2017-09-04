@@ -1,7 +1,7 @@
 function [stimulStat, scrambledStat] = ...
     analyse_stimul_fixation(trial, trialStruct, pValue, stimulImage, fixationDetector, ...
                                                   screenRect, imageRect, eyesRect, mouthRect)
-  FontSize = 6;                                                
+  FontSize = 10;                                                
   imageLeft = imageRect(1);
   imageTop = imageRect(2);
   imageWidth = imageRect(3);
@@ -43,9 +43,28 @@ function [stimulStat, scrambledStat] = ...
       rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
       hold off;
       axis([imageLeft, imageLeft + imageWidth, imageTop, imageTop + imageHeight]);
-      title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}});
+      title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex'); 
     end
+    % 'PaperPositionMode','auto',
+    set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
+    print('-dpdf', ['Stimul', num2str(iStimul), '_gam.pdf']);
+%{
+          fixIn = stimulStat(iStimul).(['numFixOn' region]);
+    fixOut = stat.numFixTotal - stat.(['numFixOn' region])
 
+    contigencyMatrixEnd(1, :) = 
+    for jSession = iSession+1:currSubject.nSession
+      subjectIndex = max(1, currSubject.sessionType(jSession));
+      currSessionIndex = currSubject.sessionIndex(jSession);
+      contigencyMatrix(2, :) = freeSession(currSessionIndex).numChoiceOfPos(subjectIndex, :);
+      contigencyMatrixEnd(2, :) = freeSession(currSessionIndex).numChoiceOfPosEnd(subjectIndex, :);
+      isAssociation(iSession, jSession) = fishertest(contigencyMatrix, 'Alpha',0.01);
+%}      
+      
+  
+
+    
+    
     %[x, y, t] = merge_trial_data(stimulFix);
     [xRaw, yRaw, ~] = merge_trial_data(stimulRaw);
     nHorizBin = ceil((max(xRaw) - min(xRaw) + 1)/8);
@@ -84,7 +103,7 @@ function [stimulStat, scrambledStat] = ...
       rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
       hold off;
       axis([imageLeft, imageLeft + imageWidth, imageTop, imageTop + imageHeight]);
-      title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}});       
+      title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex');        
     end
 
 
@@ -106,5 +125,31 @@ function [stimulStat, scrambledStat] = ...
     rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
     hold off;
   %} 
-  end                                                    
+  end 
+
+  %isAssociation = struct('ROI')
+  regionName = {'ROI', 'Face', 'Eyes', 'Mouth' };
+  
+  figure('Name', 'Fisher exact test for N fixations')
+  set( axes,'fontsize', FontSize, 'FontName', 'Times');
+  for iRegion = 1:4
+    region = regionName{iRegion};
+    fixIn = vertcat(stimulStat(:).(['numFixOn' region]));
+    fixOut = vertcat(stimulStat(:).numFixTotal) - fixIn;
+    
+    nTrial = length(fixIn);
+    for iTrial = 1:nTrial
+      contigencyMatrix(1, :) = [fixIn(iTrial), fixOut(iTrial)];
+      for jTrial = 1:nTrial
+        contigencyMatrix(2, :) = [fixIn(jTrial), fixOut(jTrial)];
+        isAssociation.(region)(iTrial, jTrial) = 32*(fishertest(contigencyMatrix, 'Alpha',0.01) + ...
+                                                     fishertest(contigencyMatrix, 'Alpha',0.05));
+      end  
+    end 
+    subplot(2, 2, iRegion);
+    image(isAssociation.(region)); 
+    colormap('winter');
+    title(['Fixations to ', region], 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex'); 
+  end  
+  
 end

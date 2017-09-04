@@ -85,39 +85,54 @@ show_fixation_report(specStimulName, specStimulStat, specScrambledStat);
 
 %% stats for different obfuscation levels
 totalObfuscTime = sum(reshape( arrayfun(@(x) sum(x.timeTotal), specStimulStat), 5, []));
-totalObfuscShareTimeInROI = sum(reshape( arrayfun(@(x) sum(x.timeInROI), specStimulStat), 5, []))./totalObfuscTime;
-totalObfuscShareTimeOnFace = sum(reshape( arrayfun(@(x) sum(x.timeOnFace), specStimulStat), 5, []))./totalObfuscTime;
-totalObfuscShareTimeOnEyes = sum(reshape( arrayfun(@(x) sum(x.timeOnEyes), specStimulStat), 5, []))./totalObfuscTime;
-totalObfuscShareTimeOnMouth = sum(reshape( arrayfun(@(x) sum(x.timeOnMouth), specStimulStat), 5, []))./totalObfuscTime;
-
 totalObfuscNumFix = sum(reshape( arrayfun(@(x) sum(x.numFixTotal), specStimulStat), 5, []));
-totalObfuscShareFixInROI = sum(reshape( arrayfun(@(x) sum(x.numFixInROI), specStimulStat), 5, []))./totalObfuscNumFix;
-totalObfuscShareFixOnFace = sum(reshape( arrayfun(@(x) sum(x.numFixOnFace), specStimulStat), 5, []))./totalObfuscNumFix;
-totalObfuscShareFixOnEyes = sum(reshape( arrayfun(@(x) sum(x.numFixOnEyes), specStimulStat), 5, []))./totalObfuscNumFix;
-totalObfuscShareFixOnMouth = sum(reshape( arrayfun(@(x) sum(x.numFixOnMouth), specStimulStat), 5, []))./totalObfuscNumFix;
+
+regionName = {'ROI', 'Eyes', 'Mouth', 'Face' };
+for iRegion = 1:4
+  region = regionName{iRegion};
+  nObfuscLevel = 3;
+  obfuscTime = cell(3, 1);
+  obfuscFix = cell(3, 1);
+  for iLevel = 1:nObfuscLevel
+    levelIndex = (5*iLevel - 4):5*iLevel;
+    obfuscTime{iLevel} = vertcat(specStimulStat(levelIndex).(['timeOn' region]));
+    obfuscFix{iLevel} = vertcat(specStimulStat(levelIndex).(['numFixOn' region]));
+
+    normalizedTime = obfuscTime{iLevel}/mean(vertcat(specStimulStat(levelIndex).timeTotal));
+    totalObfusc.(['confIntTime' region])(iLevel) = calc_cihw(std(normalizedTime), length(normalizedTime), pValue);    
+    normalizedFixNum = obfuscFix{iLevel}/mean(vertcat(specStimulStat(levelIndex).numFixTotal));  
+    totalObfusc.(['confIntFix' region])(iLevel) = calc_cihw(std(normalizedFixNum), length(normalizedFixNum), pValue);
+  end
+
+  totalObfusc.(['ShareTime' region]) = cellfun(@sum, obfuscTime)'./totalObfuscTime;
+  totalObfusc.(['ShareFix' region]) = cellfun(@sum, obfuscFix)'./totalObfuscNumFix;
+end
 
 FontSize = 12;
+regionLabel = {'to ROI', 'to face', 'to eyes', 'to mouth'};
+stimulName = {'normal', 'medium', 'strong'};
+maxValue = 0.7;
+
 figure('Name', 'Total shares of fixations (per obfucation level)');
 set( axes,'fontsize', FontSize, 'FontName', 'Times');
   
 subplot(2, 1, 1);
-barData = [totalObfuscShareFixInROI; totalObfuscShareFixOnFace; totalObfuscShareFixOnEyes; totalObfuscShareFixOnMouth];
-bar(barData); 
-legend_handleMain = legend('normal', 'medium', 'strong', 'location', 'NorthEast');
-set(legend_handleMain, 'fontsize', FontSize, 'FontName', 'Times');
-axis([0.5, 4.5, 0, 0.8]);
-set( gca, 'XTickLabel', {'in ROI', 'on face', 'on eyes', 'on mouth'}, 'fontsize', FontSize, 'FontName', 'Times');
-title('share of fixations on stimuli')
+barData = [totalObfusc.ShareFixROI; totalObfusc.ShareFixFace; totalObfusc.ShareFixEyes; totalObfusc.ShareFixMouth];
+confInt = [totalObfusc.confIntFixROI; totalObfusc.confIntFixFace; totalObfusc.confIntFixEyes; totalObfusc.confIntFixMouth];
+draw_error_bar(barData, confInt, stimulName, regionLabel, FontSize, maxValue)
+title('proportions of fixation number (stimuli)', 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex');
   
 subplot(2, 1, 2);
-barData = [totalObfuscShareTimeInROI; totalObfuscShareTimeOnFace; totalObfuscShareTimeOnEyes; totalObfuscShareTimeOnMouth];
-bar(barData); 
-legend_handleMain = legend('normal', 'medium', 'strong', 'location', 'NorthEast');
-set(legend_handleMain, 'fontsize', FontSize, 'FontName', 'Times');
-axis([0.5, 4.5, 0, 0.8]);
-set( gca, 'XTickLabel', {'in ROI', 'on face', 'on eyes', 'on mouth'}, 'fontsize', FontSize, 'FontName', 'Times');
-title('share of fixation time on stimuli')
+barData = [totalObfusc.ShareTimeROI; totalObfusc.ShareTimeFace; totalObfusc.ShareTimeEyes; totalObfusc.ShareTimeMouth];
+confInt = [totalObfusc.confIntTimeROI; totalObfusc.confIntTimeFace; totalObfusc.confIntTimeEyes; totalObfusc.confIntTimeMouth];
+draw_error_bar(barData, confInt, stimulName, regionLabel, FontSize, maxValue)
+title('proportions of fixation duration (stimuli)', 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex');
 
+set( gcf, 'PaperUnits','centimeters' );
+xSize = 28; ySize = 28;
+xLeft = 0; yTop = 0;
+set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
+print ( '-depsc', '-r300', 'obfuscationEffect.eps');
   
 %% parse file for normal stimuli only       
 normStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face 3 - Normal 0', ... 
