@@ -1,23 +1,23 @@
 function [stimulStat, scrambledStat] = ...
-    analyse_stimul_fixation(trial, trialStruct, pValue, stimulImage, fixationDetector, ...
+    analyse_stimul_fixation(trial, stimulCaption, pValue, stimulImage, fixationDetector, ...
                                                   screenRect, imageRect, eyesRect, mouthRect)
   FontSize = 10;                                                
   imageLeft = imageRect(1);
   imageTop = imageRect(2);
   imageWidth = imageRect(3);
   imageHeight = imageRect(4);
-  nStimul = length(stimulImage);
+  nStimul = length(stimulCaption);
   for iStimul = 1:nStimul 
     originalImage = imread(stimulImage{iStimul});
     scaledImage = imresize(originalImage,[imageHeight imageWidth]); 
 
 %    [stimulFix, stimulRaw, trialIndices] = get_gaze_pos(trial, 'stimulus', iStimul, fixationDetector, true);
-    [stimulFix, stimulRaw, trialIndices] = get_gaze_pos(trial, 'stimulus', iStimul, fixationDetector);
+    [stimulFix, stimulRaw, trialIndices] = get_gaze_pos(trial, 'stimulus', stimulCaption{iStimul}, fixationDetector);
     stimulFix = bound_gaze_pos(stimulFix, screenRect);
     stimulRaw = bound_gaze_pos(stimulRaw, screenRect);
     trialIndicesAsStr = arrayfun(@num2str, trialIndices, 'UniformOutput', false);
     trialCaptionLine1 = strcat('Trial', {' '}, trialIndicesAsStr);
-    trialCaptionLine2 = trialStruct.trialCaption(trialIndices)';
+    trialCaptionLine2 = {trial(trialIndices).caption};
     trialCaptionLine2 = strrep(trialCaptionLine2, 'obfuscation ', 'obf.');
 
     stimulStat(iStimul) = compute_fixation_statistic(stimulFix, pValue, screenRect, ...
@@ -39,8 +39,7 @@ function [stimulStat, scrambledStat] = ...
       %plot_fixation(stimulFix(iTrial), fixationDetector.durationThreshold, fixationDetector.dispersionThreshold, true);
       gaussian_attention_map(stimulFix(iTrial).x, stimulFix(iTrial).y, fixationDetector.dispersionThreshold/2, ...
                              stimulFix(iTrial).t, fixationDetector.durationThreshold, scaledImage, imageRect);
-      line(stimulRaw(iTrial).x, stimulRaw(iTrial).y, 'Color', 'g');
-      rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
+      line(stimulRaw(iTrial).x, stimulRaw(iTrial).y, 'Color', [0.6 0.4 0.9]);
       hold off;
       axis([imageLeft, imageLeft + imageWidth, imageTop, imageTop + imageHeight]);
       title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex'); 
@@ -76,7 +75,7 @@ function [stimulStat, scrambledStat] = ...
     hold on;
     image(imageLeft, imageTop, scaledImage);  
     histogram2(xRaw,yRaw, [nHorizBin, nVertBin],'DisplayStyle','tile','ShowEmptyBins','off');
-    rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
+    %rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
     hold off;
     %subplot(1, 2, 2);
     %set(gca, 'YDir', 'reverse');
@@ -100,14 +99,14 @@ function [stimulStat, scrambledStat] = ...
       hold on;
       image(imageLeft, imageTop, scaledImage);  
       histogram2(stimulRaw(iTrial).x, stimulRaw(iTrial).y, [nHorizBin, nVertBin],'DisplayStyle','tile','ShowEmptyBins','off');
-      rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
+      %rectangle('Position', imageRect, 'EdgeColor', 'm', 'LineWidth', 2);
       hold off;
       axis([imageLeft, imageLeft + imageWidth, imageTop, imageTop + imageHeight]);
       title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex');        
     end
 
 
-    [scrambledFix, scrambledRaw, trialIndices] = get_gaze_pos(trial, 'scrambled', iStimul, fixationDetector);
+    [scrambledFix, scrambledRaw, trialIndices] = get_gaze_pos(trial, 'scrambled', stimulCaption{iStimul}, fixationDetector);
     scrambledFix = bound_gaze_pos(scrambledFix, screenRect);
     scrambledRaw = bound_gaze_pos(scrambledRaw, screenRect);
     scrambledStat(iStimul) = compute_fixation_statistic(scrambledFix, pValue, screenRect, ...
@@ -127,12 +126,13 @@ function [stimulStat, scrambledStat] = ...
   %} 
   end 
 
-  %isAssociation = struct('ROI')
+  %% Fisher test for number of fixations for various stimuli in each region
   regionName = {'ROI', 'Face', 'Eyes', 'Mouth' };
+  nRegion = 4;
   
   figure('Name', 'Fisher exact test for N fixations')
   set( axes,'fontsize', FontSize, 'FontName', 'Times');
-  for iRegion = 1:4
+  for iRegion = 1:nRegion
     region = regionName{iRegion};
     fixIn = vertcat(stimulStat(:).(['numFixOn' region]));
     fixOut = vertcat(stimulStat(:).numFixTotal) - fixIn;
@@ -151,5 +151,21 @@ function [stimulStat, scrambledStat] = ...
     colormap('winter');
     title(['Fixations to ', region], 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex'); 
   end  
-  
+
+  %% Kruskal-Wallis test for number of fixations for various stimuli in each region  
+  p = cell(1, nRegion); 
+  tbl = cell(1, nRegion);
+  stats = cell(1, nRegion);
+  for iRegion = 1:nRegion
+    region = regionName{iRegion};
+    shareFixationTime = vertcat(stimulStat(:).(['shareTimeOn' region]));
+    stimulGroupSize = arrayfun(@(x) length(x.trialIndex), stimulStat);
+    stimulName = cell(1, length(shareFixationTime));
+    groupEnd = cumsum(stimulGroupSize);    
+    groupStart = 1 + [0 groupEnd(1:end-1)];    
+    for i = 1:length(stimulGroupSize)
+      stimulName(groupStart(i):groupEnd(i)) = stimulCaption(i);       
+    end
+    [p{iRegion}, tbl{iRegion}, stats{iRegion}] = kruskalwallis(shareFixationTime, stimulName);
+  end    
 end

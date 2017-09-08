@@ -25,13 +25,15 @@ function show_fixation_report(stimulName, stimulStat, scrambledStat)
 
   %lineType = {'r-o', 'r-*', 'r-s', 'b--o', 'b--*', 'b--s'};
   %fieldName = {'shareTimeOnFace', 'shareTimeOnEyes', 'shareTimeOnMouth', 'shareFixOnFace', 'shareFixOnEyes', 'shareFixOnMouth'};
-  lineType = {'r-o', 'r-*', 'b--o', 'b--*'};
-  fieldName = {'shareTimeOnFace', 'shareTimeOnEyes', 'shareFixOnFace', 'shareFixOnEyes'};
+  %lineType = {'r-o', 'r-*', 'b--o', 'b--*'};
+  lineType = {'r-o', 'b--*'};
+  fieldName = {'shareFixOnFace', 'shareFixOnEyes'};
   nField = length(fieldName);
   
   nStimul = length(stimulName);
   nStimCol = floor(sqrt(2*nStimul));
   nStimRow = ceil(nStimul/nStimCol);
+  regionLabel = {'to ROI', 'to eyes'};  
   figure('Name', 'Trial-wise shares of fixations');
   set( axes,'fontsize', FontSize, 'FontName','Times');
   for iStimul = 1:nStimul
@@ -42,21 +44,23 @@ function show_fixation_report(stimulName, stimulStat, scrambledStat)
     end
     hold off
     set(gca, 'XTick', 1:length(stimulStat(iStimul).trialIndex), 'XTickLabel', cellstr(num2str(stimulStat(iStimul).trialIndex(:))), 'fontsize', FontSize, 'FontName','Times');
-    axis([0.8, length(stimulStat(iStimul).(fieldName{iField})) + 0.2, 0, 1.2]);
-    legend_handleMain = legend(fieldName, 'location', 'NorthEast');
+    axis([0.8, length(stimulStat(iStimul).(fieldName{iField})) + 0.2, 0, 1.0]);
+    xlabel( ' Trial ', 'fontsize', FontSize, 'FontName', 'Times');
+    ylabel( ' Proportions of fixation number ', 'fontsize', FontSize, 'FontName', 'Times');
+    legend_handleMain = legend(regionLabel, 'location', 'NorthEast');
     set(legend_handleMain, 'fontsize', FontSize-1, 'FontName','Times', 'Interpreter', 'latex');
     title(stimulName{iStimul}, 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex'); 
   end
   set( gcf, 'PaperUnits','centimeters' );
-  xSize = 40; ySize = 28;
+  xSize = 36; ySize = 24;
   xLeft = 0; yTop = 0;
   set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
   print ( '-depsc', '-r300', 'timeCource.eps');
 
+  regionLabel = {'to ROI', 'to face', 'to eyes', 'to mouth'};  
   figure('Name', 'Fixations proportions');
   set( axes,'fontsize', FontSize, 'FontName','Times');
-  regionLabel = {'to ROI', 'to face', 'to eyes', 'to mouth'};
-  maxValue = 1.2;
+  maxValue = 1.29;
   subplot(2, 3, 1);
   barData = [totalFix.shareOnROI; totalFix.shareOnFace; totalFix.shareOnEyes; totalFix.shareOnMouth];
   confInt = [totalFix.confIntROI; totalFix.confIntFace; totalFix.confIntEyes; totalFix.confIntMouth];
@@ -71,7 +75,7 @@ function show_fixation_report(stimulName, stimulStat, scrambledStat)
 
   subplot(2, 3, 3);
   barData = [totalFix.firstFixOnROI; totalFix.firstFixOnFace; totalFix.firstFixOnEyes; totalFix.firstFixOnMouth];
-  draw_error_bar(barData, stimulName, regionLabel, FontSize, maxValue);   
+  draw_error_bar(barData, stimulName, regionLabel, FontSize, maxValue+0.2);   
   title('first fixation rate (scrambled) (stimuli)', 'fontsize', FontSize, 'FontName','Times', 'Interpreter', 'latex')
   
   regionLabel = {'to ROI', 'to eyes', 'to mouth'};
@@ -89,14 +93,15 @@ function show_fixation_report(stimulName, stimulStat, scrambledStat)
 
   subplot(2, 3, 6);
   barData = [totalFixScram.firstFixOnROI; totalFixScram.firstFixOnEyes; totalFixScram.firstFixOnMouth];
-  draw_error_bar(barData, stimulName, regionLabel, FontSize, maxValue);   
+  draw_error_bar(barData, stimulName, regionLabel, FontSize, maxValue+0.2);   
   title('first fixation rate (scrambled)', 'fontsize', FontSize, 'FontName', 'Times', 'Interpreter', 'latex')
   
   set( gcf, 'PaperUnits','centimeters' );
-  xSize = 40; ySize = 28;
+  xSize = 36; ySize = 24;
   xLeft = 0; yTop = 0;
   set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
   print ( '-depsc', '-r300', 'barPlot.eps');
+  
   
   %{
   figure('Name', 'Total shares of fixations');

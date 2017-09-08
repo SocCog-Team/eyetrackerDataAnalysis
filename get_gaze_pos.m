@@ -3,7 +3,7 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
     error('Too few parameters! Please pass to the function at least the trial structure and the state of interest');
   end 
   if (nargin < 3)
-    stimul = 0;
+    stimul = [];
   end 
   [rawPos, trialIndices] = get_raw_trial_data(trial, state, stimul);
   
@@ -46,12 +46,15 @@ function [rawData, selectedTrialIndex] = get_raw_trial_data(trial, state, stimul
   end 
   
   %select all trials where specified stimul was presented
-  if ((nargin < 3) || (stimul == 0))
+  if ((nargin < 3) || isempty(stimul))
     %consider all types of stimuli
     selectedTrialIndex = 1:length(trial);
   else    
-    selectedTrialInCell = arrayfun(@(x) find([trial.stimulIndex] == x), stimul, 'UniformOutput', false);   
-    selectedTrialIndex = sort([selectedTrialInCell{:}]); 
+    % selectedTrialInCell = arrayfun(@(x) find([trial.stimulIndex] == x), stimul, 'UniformOutput', false);   
+    % selectedTrialIndex = sort([selectedTrialInCell{:}]); 
+    
+    selectedTrialInCell = strfind({trial.caption}, stimul);   
+    selectedTrialIndex = find( cellfun(@(x) ~isempty(x), selectedTrialInCell) ); 
   end 
   
   %select the specified state

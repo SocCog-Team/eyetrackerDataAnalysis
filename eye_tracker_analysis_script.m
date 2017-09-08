@@ -48,23 +48,22 @@ pValue = 0.05;
 
 fixationDetector = struct('method', 'dispersion-based', ...
                           'dispersionThreshold', 30, ...
-                          'durationThreshold', 120);
+                          'durationThreshold', 100); %120
+[dataTable, trialStruct, trial] = read_primatar_data_from_file(filename, true);                        
 
-%% parse file for trials  grouped by original image                                               
-[trial, dataTable, trialStruct] = parse_eye_tracker_file(filename, stimulName, true);  
 
 %% analyse trials  grouped by original image      
 % plot gaze results for fixation    
 analyse_initial_fixation(trial, fixationDetector, screenRect, fixPointRect);
 
 % plot gaze results for stimuli
-[stimulStat, scrambledStat] = analyse_stimul_fixation(trial, trialStruct, pValue, stimulImage, fixationDetector, ...
+[stimulStat, scrambledStat] = analyse_stimul_fixation(trial, stimulName, pValue, stimulImage, fixationDetector, ...
                                                   screenRect, imageRect, eyesRect, mouthRect);
 % final statistic
 show_fixation_report(stimulName, stimulStat, scrambledStat);
 
 
-%% parse file for grouped by presented image       
+%% analyse trials grouped by presented image        
 specStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face 3 - Normal 0', ... 
                   'Realistic avatar - Normal 1', 'Unrealistic avatar - Normal 2',  ... 
                   'Real face 1 - Moderate obfuscation  3', 'Real face 2 - Moderate obfuscation  3', 'Real face 3 - Moderate obfuscation  3', ... 
@@ -74,11 +73,9 @@ specStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face
 specEyesRect = [eyesRect; eyesRect; eyesRect];
 specMouthRect = [mouthRect; mouthRect; mouthRect];
 specStimulImage = [stimulImage, stimulImage, stimulImage];
-[specTrial, ~, specTrialStruct] = parse_eye_tracker_file(filename, specStimulName, true);  
 
-%% analyse trials grouped by presented image  
 % plot gaze results for stimuli
-[specStimulStat, specScrambledStat] = analyse_stimul_fixation(specTrial, specTrialStruct, pValue, specStimulImage, fixationDetector, ...
+[specStimulStat, specScrambledStat] = analyse_stimul_fixation(trial, specStimulName, pValue, specStimulImage, fixationDetector, ...
                                                   screenRect, imageRect, specEyesRect, specMouthRect);
 % final statistic
 show_fixation_report(specStimulName, specStimulStat, specScrambledStat);
@@ -134,14 +131,12 @@ xLeft = 0; yTop = 0;
 set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
 print ( '-depsc', '-r300', 'obfuscationEffect.eps');
   
-%% parse file for normal stimuli only       
+%% analyse for normal stimuli only       
 normStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face 3 - Normal 0', ... 
                   'Realistic avatar - Normal 1', 'Unrealistic avatar - Normal 2'};          
-[normTrial, ~, normTrialStruct] = parse_eye_tracker_file(filename, normStimulName, true);  
 
-%% analyse for normal stimuli only       
 % plot gaze results for stimuli
-[normStimulStat, normScrambledStat] = analyse_stimul_fixation(normTrial, normTrialStruct, pValue, ...
+[normStimulStat, normScrambledStat] = analyse_stimul_fixation(trial, normStimulName, pValue, ...
                                         stimulImage, fixationDetector, screenRect, imageRect, eyesRect, mouthRect);
 % final statistic
 show_fixation_report(normStimulName, normStimulStat, normScrambledStat);

@@ -90,8 +90,8 @@ function gaussian_attention_map(x, y, sigma, varargin)
   transparencyMap(fixationMap > 1) = maxTransperentValue;
 
   % create fixationMap image from mapImage
-  fixationMap(fixationMap > 2.56) = 2.56; 
-  fixationImage = ind2rgb(uint8(100*fixationMap), parula(256));
+  fixationMap(fixationMap > 2) = 2; 
+  fixationImage = ind2rgb(uint8(128*fixationMap), parula(256));
   refFinalImage = imref2d(size(fixationMap));
   refFinalImage.XWorldLimits = [minX maxX];
   refFinalImage.YWorldLimits = [minY maxY];

@@ -16,10 +16,11 @@ function draw_error_bar(mean, varargin)
   xRange = 1:nBars;
   offset = fix(-nDataSource/2):fix(nDataSource/2);
   smooshFactor = 0.8;
-  barWidth = 0.9*smooshFactor/nDataSource;
+  barWidth = 0.85*smooshFactor/nDataSource;
 
   colorVector = (0:nDataSource-1)/(nDataSource-1);
-  barColor = [1 - 0.7*colorVector; 1 - 0.5*colorVector; colorVector];
+  barColor = [1 - 0.75*colorVector; 0.4 + 0.1*colorVector; 0.25 + 0.5*colorVector];
+  %barColor = [min(0.7 + 0.4*colorVector, 1); 0.35 + 0.5*colorVector; max(0.8 - 0.9*colorVector, 0)];
   barHandle = [];
   
   hold on;

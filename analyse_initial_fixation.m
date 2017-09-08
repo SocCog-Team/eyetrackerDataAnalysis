@@ -1,6 +1,6 @@
 function analyse_initial_fixation(trial, fixationDetector, screenRect, fixPointRect)
-  [fixationOnFix1, rawGazeOnFix1, ~] = get_gaze_pos(trial, 'fix1', 0, fixationDetector);
-  [fixationOnFix2, rawGazeOnFix2, ~] = get_gaze_pos(trial, 'fix2', 0, fixationDetector);
+  [fixationOnFix1, rawGazeOnFix1, ~] = get_gaze_pos(trial, 'fix1', [], fixationDetector);
+  [fixationOnFix2, rawGazeOnFix2, ~] = get_gaze_pos(trial, 'fix2', [], fixationDetector);
   fixationOnFix1 = bound_gaze_pos(fixationOnFix1, screenRect);
   fixationOnFix2 = bound_gaze_pos(fixationOnFix2, screenRect);
   [x1, y1, t1] = merge_trial_data(fixationOnFix1);
