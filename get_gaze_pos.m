@@ -1,9 +1,40 @@
 function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, fixSelector, isDraw)
+% get_gaze_pos extract raw gaze data in given state from trials corresponding to the given stimulus.
+%   Optionally, fixations are also computed. 
+% INPUT
+%   - trial - array of structures containing data about trials for each specified stimulus. 
+%     Each entry contains the following fields:
+%      - caption - full caption of the trial (coincides with corresponding element of trialCaption)
+%      - fix1Data, fix2Data, scrambledData, stimulusData - structures wtih
+%        raw gaze data for each of the trial step. Contain the fields
+%         - GazeX - x gaze coordinate;
+%         - GazeY - y gaze coordinate;
+%         - GazeSpeed - gaze speed;
+%         - GazeTime - duration of this data sample;
+%         - TimeStamp - timestamp of this data sample;;
+%   - state - string specifying the state for that data should be provided.
+%     state can be either fix1, fix2, scrambled or stimulus.   
+
+% OPTIONAL INPUT (these values may be omitted)
+%   - stimul - string specifying  
+%   radius of fixation areas.
+%   - fixSelector
+%   - isDraw
+
+% OUTPUT:
+%   - fixation
+%   - rawPos
+%   - trialIndices
+%
+% EXAMPLE of use 
+%
+%
+
   if (nargin < 2)
     error('Too few parameters! Please pass to the function at least the trial structure and the state of interest');
   end 
   if (nargin < 3)
-    stimul = [];
+    stimul = []; % data for all stimuli is requested
   end 
   [rawPos, trialIndices] = get_raw_trial_data(trial, state, stimul);
   
@@ -33,26 +64,18 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
       end  
       fixation = getFixDispersionBased(rawPos, fixSelector.dispersionThreshold, fixSelector.durationThreshold, isDraw);
     else
-      error('Specified method for fixation detection is not implemented. Set the field "method"  to dispersion-based or velocity-based!' );
+      error('Specified method for fixation detection is not implemented. Set the field "method" to dispersion-based or velocity-based!' );
     end     
   end  
 end
 
 
-
+% get_raw_trial_data extract raw gaze data for given state from trials where given stimulus was presented
 function [rawData, selectedTrialIndex] = get_raw_trial_data(trial, state, stimul)
-  if (nargin < 2)
-    error('Too few parameters! Please pass to the function at least the trial structure, the state of interest and the presented stimuli');
-  end 
-  
   %select all trials where specified stimul was presented
-  if ((nargin < 3) || isempty(stimul))
-    %consider all types of stimuli
-    selectedTrialIndex = 1:length(trial);
-  else    
-    % selectedTrialInCell = arrayfun(@(x) find([trial.stimulIndex] == x), stimul, 'UniformOutput', false);   
-    % selectedTrialIndex = sort([selectedTrialInCell{:}]); 
-    
+  if ((nargin < 3) || isempty(stimul))    %if all stimuli are of interest
+    selectedTrialIndex = 1:length(trial); %select all trials
+  else       
     selectedTrialInCell = strfind({trial.caption}, stimul);   
     selectedTrialIndex = find( cellfun(@(x) ~isempty(x), selectedTrialInCell) ); 
   end 
