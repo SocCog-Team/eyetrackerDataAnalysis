@@ -14,7 +14,12 @@ function draw_error_bar(mean, varargin)
   maxValue = varargin{settingPos + 3};
     
   xRange = 1:nBars;
-  offset = fix(-nDataSource/2):fix(nDataSource/2);
+  if (mod(nDataSource,2))
+    marginValue = fix(nDataSource/2);
+  else
+    marginValue = (nDataSource-1)/2;
+  end
+  offset = -marginValue:marginValue;
   smooshFactor = 0.8;
   barWidth = 0.85*smooshFactor/nDataSource;
 
@@ -36,10 +41,10 @@ function draw_error_bar(mean, varargin)
   %errorbar(barX, barData, errData, 'o')
   hold off;  
   legend_handleMain = legend(barHandle, legendEntry, 'location', 'NorthEast');
-  set(legend_handleMain, 'fontsize', fontSize-1, 'FontName','Times', 'Interpreter', 'latex');
+  set(legend_handleMain, 'fontsize', fontSize-1, 'FontName','Arial');%, 'FontName','Times', 'Interpreter', 'latex');
 
   axis([0.5, nBars + 0.5, 0, maxValue]);
-  set( gca, 'XTick', 1:nBars, 'XTickLabel', conditionName, 'fontsize', fontSize, 'FontName','Times');  
+  set( gca, 'XTick', 1:nBars, 'XTickLabel', conditionName, 'fontsize', fontSize, 'FontName','Arial');%'FontName','Times');  
   
 
 end

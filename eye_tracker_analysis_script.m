@@ -1,4 +1,6 @@
-filename = 'Z:\taskcontroller\DAG-3\PrimatarData\Cornelius_20170714_1250\TrackerLog--ArringtonTracker--2017-14-07--12-50.txt';
+%filename = 'Z:\taskcontroller\DAG-3\PrimatarData\Cornelius_20170714_1250\TrackerLog--ArringtonTracker--2017-14-07--12-50.txt';
+filename = 'Z:\taskcontroller\SCP-CTRL-01\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\PrimatarData\Session_on_20-10--16-04\TrackerLog--EyeLink--2017-20-10--16-04_fixed.txt';
+
 
 screenWidth = 1280;
 screenHeight = 1024;
