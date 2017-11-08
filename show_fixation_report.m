@@ -76,7 +76,7 @@ function show_fixation_report(stimulName, stimulStat, scrambledStat)
   subplot(2, 3, 3);
   barData = [totalFix.firstFixOnROI; totalFix.firstFixOnFace; totalFix.firstFixOnEyes; totalFix.firstFixOnMouth];
   draw_error_bar(barData, stimulName, regionLabel, FontSize, maxValue+0.2);   
-  title('first fixation rate (scrambled) (stimuli)', 'fontsize', FontSize, 'FontName','Arial'); %, 'Interpreter', 'latex'
+  title('first fixation rate (stimuli)', 'fontsize', FontSize, 'FontName','Arial'); %, 'Interpreter', 'latex'
   
   regionLabel = {'to ROI', 'to eyes', 'to mouth'};
   subplot(2, 3, 4);

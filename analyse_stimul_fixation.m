@@ -44,10 +44,10 @@ function [stimulStat, scrambledStat] = ...
       axis off; 
       axis([imageLeft, imageLeft + imageWidth, imageTop, imageTop + imageHeight]);
       %print a short name of stimul 
-      titleText = strsplit(trialCaptionLine2{1}, ' -');      
-      title({trialCaptionLine1{iTrial}; titleText{1}}, 'fontsize', FontSize, 'FontName','Arial'); 
+      %titleText = strsplit(trialCaptionLine2{1}, ' -');      
+      %title({trialCaptionLine1{iTrial}; titleText{1}}, 'fontsize', FontSize, 'FontName','Arial'); 
       %%or a full name
-      %title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Arial'); 
+      title({trialCaptionLine1{iTrial}; trialCaptionLine2{iTrial}}, 'fontsize', FontSize, 'FontName','Arial'); 
     end
     % 'PaperPositionMode','auto',
     set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
@@ -108,7 +108,11 @@ for iFig = 1:2
      
   plotHandle = gobjects(nStimul, 1);  
   %all hit maps
-  figure('Average attention maps');
+  if (iFig == 1)
+    figure('Name', 'Average (over first five presentations) attention maps');
+  else
+    figure('Name', 'Average (over all presentations) attention maps');
+  end  
   set( axes,'fontsize', FontSize, 'FontName', 'Arial');
 %{
 set(0, 'DefaultAxesFontName', 'Arial');
@@ -125,6 +129,8 @@ set(0, 'DefaultTextFontName', 'Arial');
     
     if (iFig == 2)
       nTrialToShowTogether = length(stimulFix);
+    else  
+      nTrialToShowTogether = min(length(stimulFix), nTrialToShowTogether);
     end  
     
     allX = [stimulFix(1:nTrialToShowTogether).x];
@@ -163,11 +169,10 @@ set(0, 'DefaultTextFontName', 'Arial');
 end
   
 
-  nTrialToShowTogether = 5;
   nCol = floor(sqrt(2*nStimul));
   nRow = ceil(nStimul/nCol);           
   %all hit maps
-  figure
+  figure('Name', 'Sum of attention maps');
   set( axes,'fontsize', FontSize, 'FontName', 'Arial');  
   for iStimul = 1:nStimul 
     originalImage = imread(stimulImage{iStimul});
@@ -177,6 +182,7 @@ end
     stimulFix = bound_gaze_pos(stimulFix, screenRect);
     %trialCaptionLine2 = {trial(trialIndices).caption};
     
+    nTrialToShowTogether = length(stimulFix);
     allX = [stimulFix(1:nTrialToShowTogether).x];
     allY = [stimulFix(1:nTrialToShowTogether).y];
     allT = [stimulFix(1:nTrialToShowTogether).t];    
