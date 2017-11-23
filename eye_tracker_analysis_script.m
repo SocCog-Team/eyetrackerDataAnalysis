@@ -2,6 +2,24 @@
 %filename = 'Z:\taskcontroller\SCP-CTRL-01\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\PrimatarData\Session_on_20-10--16-04\TrackerLog--EyeLink--2017-20-10--16-04_fixed.txt';
 filename = 'Z:\taskcontroller\SCP-CTRL-01\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\PrimatarData\Session_on_07-11--15-27\TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt';
 
+% PC
+base_dir = fullfile('Z:', 'taskcontroller');
+%filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt');
+%mac
+base_dir = fullfile('/Volumes', 'social_neuroscience_data', 'taskcontroller');
+
+filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt');
+filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_09-11--10-51', 'TrackerLog--EyeLink--2017-09-11--10-51.fixed.txt');
+
+
+ 
+
+
+[data_dir, logfile_name] = fileparts(filename);
+
+out_dir = fullfile(data_dir, 'ANALYSIS');
+
+
 screenWidth = 1280;
 screenHeight = 1024;
 screenRect = [0, 0, screenWidth, screenHeight];          
@@ -17,11 +35,11 @@ imageLeft = fixPointX - imageWidth/2;
 imageTop = fixPointY - imageHeight/2;
 imageRect = [imageLeft, imageTop, imageWidth, imageHeight];             
 
-stimulImage = {'Z:\taskcontroller\Stimuli\Primatar\20170714\face1.png', ...
-               'Z:\taskcontroller\Stimuli\Primatar\20170714\face2.png', ...
-               'Z:\taskcontroller\Stimuli\Primatar\20170714\face3.png', ...
-               'Z:\taskcontroller\Stimuli\Primatar\20170714\RealistcAvatar.png', ...
-               'Z:\taskcontroller\Stimuli\Primatar\20170714\UnrealisticAvatar.png'};
+stimulImage = {fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face1.png'), ...
+               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face2.png'), ...
+               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face3.png'), ...
+               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'RealistcAvatar.png'), ...
+               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'UnrealisticAvatar.png')};
 
 stimulName = {'Real face 1', 'Real face 2', 'Real face 3', 'Realistic avatar', 'Unrealistic avatar'};          
 nStimul = length(stimulName);            
