@@ -1,13 +1,13 @@
 function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename, needCorrectTimeStamps)
 % read_primatar_data_from_file reads data of primatar experiment trials from a
 % single EVENT IDE eye-tracker file and stores it in a dataset and in a structures describing trials.
-% Each trial consists of the following steps: 
+% Each trial consists of the following stages: 
 % 1) first initial fixation
 % 2) first reward
 % 3) viewing real face
 % 4) second initial fixation
 % 5) second reward
-% 6) viewing real face
+% 6) viewing scrambled face
 %
 % INPUT
 %   - filename - name of EVENT IDE file, char array;
@@ -47,10 +47,12 @@ function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename
 %                   'Realistic avatar - Normal 1', 'Unrealistic avatar - Normal 2'};          
 % [normTrial, ~, normTrialStruct] = parse_eye_tracker_file(filename, normStimulName, true);      
 %
-  if (strcmp(filename, 'Z:\taskcontroller\DAG-3\PrimatarData\Cornelius_20170714_1250\TrackerLog--ArringtonTracker--2017-14-07--12-50.txt'))
+  if (~isempty(strfind(filename, 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt')))
     logVersion = 'Primatar_20170714';
-  else
+  elseif (~isempty(strfind(filename, 'TrackerLog--EyeLink--2017'))) 
     logVersion = 'Primatar_20171020';
+  else 
+    logVersion = 'Primatar_20180802';
   end  
   dataTable = fnParseEventIDETrackerLog_simple_v01(filename, logVersion);   
   dataTable.CurrentEvent = categorical(dataTable.CurrentEvent);

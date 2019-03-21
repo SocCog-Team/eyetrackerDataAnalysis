@@ -1,12 +1,12 @@
-function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, fixSelector, isDraw)
+function [fixation, rawGaze, trialIndices] = get_gaze_pos(trial, state, stimul, fixSelector, isDraw)
 % get_gaze_pos extract raw gaze data in given state from trials corresponding to the given stimulus.
 %   Optionally, fixations are also computed. 
 % INPUT
 %   - trial - array of structures containing data about trials for each specified stimulus. 
 %     Each entry contains the following fields:
 %      - caption - full caption of the trial (coincides with corresponding element of trialCaption)
-%      - fix1Data, fix2Data, scrambledData, stimulusData - structures wtih
-%        raw gaze data for each of the trial step. Contain the fields
+%      - fix1Data, fix2Data, scrambledData, stimulusData - structures with
+%        raw gaze data for each state within the trial. Contain the fields
 %         - GazeX - x gaze coordinate;
 %         - GazeY - y gaze coordinate;
 %         - GazeSpeed - gaze speed;
@@ -16,18 +16,34 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
 %     state can be either fix1, fix2, scrambled or stimulus.   
 
 % OPTIONAL INPUT (these values may be omitted)
-%   - stimul - string specifying  
-%   radius of fixation areas.
-%   - fixSelector
-%   - isDraw
+%   - stimul - string specifying the stimuli (captions of trials) of interest.  
+%              If specified, only respective trials are processed. If not
+%              specified, all trials are processed.
+%   - fixSelector - structure describing the algorithm for fixation
+%                   detection. If not specified, only raw gaze data is extracted. 
+%   - isDraw - boolean, specifies whether Gaze Traces nead to be plotted 
+%              (useful for debug purposes)
 
 % OUTPUT:
-%   - fixation
-%   - rawPos
-%   - trialIndices
+%   - fixations - array of structures containing fixation data for 
+%     the trial parts related to specified state,
+%     for the trials corresponding to specified stimuli
+%     Each structure describe single trial and contains three fields:
+%      - x - array of fixations x-coordinates;
+%      - x - array of fixations y-coordinates;
+%      - t - array of fixations durations;
 %
-% EXAMPLE of use 
+%   - rawGaze - array of structures containing raw gaze data for 
+%     the trial parts related to the specified state,
+%     for the trials corresponding to the specified stimuli
+%     Each structure describe single trial and contains three fields:
+%      - x - array of gaze x-coordinates;
+%      - y - array of gaze y-coordinates;
+%      - t - array of gaze durations;
+%      - speed - array of gaze speeds for each sample;
+%      - timestamp - array of timestamp of this data sample;
 %
+%   - trialIndices - indices of trials corresponding to the specified stimuli 
 %
 
   if (nargin < 2)
@@ -36,9 +52,8 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
   if (nargin < 3)
     stimul = []; % data for all stimuli is requested
   end 
-  [rawPos, trialIndices] = get_raw_trial_data(trial, state, stimul);
+  [rawGaze, trialIndices] = getRawTrialData(trial, state, stimul);
   
-  %%%
   fixation = [];
   if ((nargin >= 4) && (isfield( fixSelector, 'method') ))
     if (nargin < 5)
@@ -54,7 +69,7 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
       if (~isfield( fixSelector, 'method'))
         fixSelector.durationThreshold = 0; %we accept all fixations
       end  
-      fixation = getFixVelocityBased(rawPos, fixSelector.speedThreshold, fixSelector.durationThreshold, isDraw);
+      fixation = getFixVelocityBased(rawGaze, fixSelector.speedThreshold, fixSelector.durationThreshold, isDraw);
     elseif (strcmp(fixSelector.method, 'dispersion-based' ))
       if (~isfield( fixSelector, 'dispersionThreshold'))
         error('Please specify field dispersionThreshold for fixSelector structure (forth argument)!' );
@@ -62,7 +77,7 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
       if (~isfield( fixSelector, 'method'))
         fixSelector.durationThreshold = 0; %we accept all fixations
       end  
-      fixation = getFixDispersionBased(rawPos, fixSelector.dispersionThreshold, fixSelector.durationThreshold, isDraw);
+      fixation = getFixDispersionBased(rawGaze, fixSelector.dispersionThreshold, fixSelector.durationThreshold, isDraw);
     else
       error('Specified method for fixation detection is not implemented. Set the field "method" to dispersion-based or velocity-based!' );
     end     
@@ -70,10 +85,10 @@ function [fixation, rawPos, trialIndices] = get_gaze_pos(trial, state, stimul, f
 end
 
 
-% get_raw_trial_data extract raw gaze data for given state from trials where given stimulus was presented
-function [rawData, selectedTrialIndex] = get_raw_trial_data(trial, state, stimul)
+% getRawTrialData extract raw gaze data for given state from trials where given stimulus was presented
+function [rawData, selectedTrialIndex] = getRawTrialData(trial, state, stimul)
   %select all trials where specified stimul was presented
-  if ((nargin < 3) || isempty(stimul))    %if all stimuli are of interest
+  if (isempty(stimul))    %if all stimuli are of interest
     selectedTrialIndex = 1:length(trial); %select all trials
   else       
     selectedTrialInCell = strfind({trial.caption}, stimul);   
@@ -81,16 +96,7 @@ function [rawData, selectedTrialIndex] = get_raw_trial_data(trial, state, stimul
   end 
   
   %select the specified state
-  selectedState = [state 'Data'];
-  %{
-  isThisStateName = strcmp({'fix1', 'fix2', 'scrambled', 'stimulus'}, state);
-  if (any(isThisStateName)) 
-    selectedState = [state 'Data'];
-  else    
-    error('Incorrect state name! Valid names are: fix1, scrambled, fix2, stimulus');
-  end    
-  %}
-  
+  selectedState = [state 'Data'];   
   rawData = struct('x', getTrialCells(trial(selectedTrialIndex), selectedState, 'GazeX'), ...
                    'y', getTrialCells(trial(selectedTrialIndex), selectedState, 'GazeY'), ...
                    't', getTrialCells(trial(selectedTrialIndex), selectedState, 'GazeTime'), ...
@@ -104,7 +110,7 @@ function timeSeriesCells = getTrialCells(trials, selectedState, fieldName )
 end
   
 
-function fixation = getFixVelocityBased(rawPos, speedThreshold, fixationDurationThreshold, isDraw)
+function fixation = getFixVelocityBased(rawPos, speedThreshold, fixationDurationThreshold)
   %incomplete
   nTrial = length(rawPos);
   fixation = repmat(struct('x', [], 'y', [], 't', []), 1, nTrial);

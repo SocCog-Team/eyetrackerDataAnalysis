@@ -1,45 +1,26 @@
-
+% @brief draw_error_bar creates a bar graph with grouped bars and 
+% (optionally) with confidence intervals
+%
+% INPUT
+%   - mean - matrix of MxN mean values representing the height of the bars
+%   - confInt - matrix of MxN confidence intervals values representing the
+%   error marks. If confInt is an empty array, no error marks are shown
+%
+% OUTPUT
+%   - barHandle - array of handles to the plotted bars
+% EXAMPLE 
 %{
-testLabel = {'0.0', '0.1', '0.2', '0.3', '0.4', '0.5'};
-legendEntry = {'Param 1', 'Param 2', 'Param 3'};
-xTickLabel = {'condition 1', 'condition 2', 'condition 3', 'condition 4'};  
-
-nBar = length(legendEntry);
-nXTick = length(xTickLabel);
-
-% rows represent conditions that is xTicks, 
-% columns represent type of parameter that is value for each bar 
-meanValue = 10 + 20*rand(nXTick, nBar); 
-stdValue = 8*rand(nXTick, nBar);
-
-FontSize = 14;
-figure
-set( axes,'fontsize', FontSize, 'FontName','Arial');
-maxValue = max(max(meanValue + stdValue)) + 5; %max y value for setting correct axis
-subplot(2, 1, 1); %first draw with std
-draw_error_bar(meanValue, stdValue, legendEntry, xTickLabel, FontSize, maxValue);
-
-subplot(2, 1, 2); %then draw without std
-draw_error_bar(meanValue, legendEntry, xTickLabel, FontSize, maxValue);
- 
+ % three bars are plotted for each of two points
+ mean = [5,6,7;7,8,9];
+ confInt = [1,2,3; 1,1,1];
+ draw_error_bar(mean, confInt)
+ set( gca, 'XTick', 1:2);  
 %}
 
-
-function draw_error_bar(mean, varargin)
+function barHandle = draw_error_bar(mean, confInt)
   [nBars, nDataSource] = size(mean);  
-  if (length(varargin) > 4)
-    showError = true;
-    confInt = varargin{1};    
-    settingPos = 2;
-  else
-    showError = false;
-    settingPos = 1;
-  end
-  legendEntry = varargin{settingPos};
-  conditionName = varargin{settingPos + 1};
-  fontSize = varargin{settingPos + 2};
-  maxValue = varargin{settingPos + 3};
-    
+  showConfInt = ~isempty(confInt);
+   
   xRange = 1:nBars;
   if (mod(nDataSource,2))
     marginValue = fix(nDataSource/2);
@@ -52,7 +33,6 @@ function draw_error_bar(mean, varargin)
 
   colorVector = (0:nDataSource-1)/(nDataSource-1);
   barColor = [1 - 0.75*colorVector; 0.4 + 0.1*colorVector; 0.25 + 0.5*colorVector];
-  %barColor = [min(0.7 + 0.4*colorVector, 1); 0.35 + 0.5*colorVector; max(0.8 - 0.9*colorVector, 0)];
   barHandle = [];
   
   hold on;
@@ -60,18 +40,9 @@ function draw_error_bar(mean, varargin)
     barOrigins = xRange + smooshFactor*(offset(i)/nDataSource);
     b = bar(barOrigins, mean(:, i), barWidth, 'FaceColor', barColor(:, i));
     barHandle = [barHandle b]; 
-    if (showError)
+    if (showConfInt)
       errorbar(barOrigins, mean(:, i), confInt(:, i), 'LineStyle', 'none', 'color', 'black');
     end  
   end  
-  %bar(barX, barData); 
-  %errorbar(barX, barData, errData, 'o')
-  hold off;  
-  legend_handleMain = legend(barHandle, legendEntry, 'location', 'NorthEast');
-  set(legend_handleMain, 'fontsize', fontSize-1, 'FontName','Arial');%, 'FontName','Times', 'Interpreter', 'latex');
-
-  axis([0.5, nBars + 0.5, 0, maxValue]);
-  set( gca, 'XTick', 1:nBars, 'XTickLabel', conditionName, 'fontsize', fontSize, 'FontName','Arial');%'FontName','Times');  
-  
-
+  hold off; 
 end

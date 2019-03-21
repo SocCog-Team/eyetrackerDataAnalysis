@@ -1,15 +1,20 @@
-%filename = 'Z:\taskcontroller\DAG-3\PrimatarData\Cornelius_20170714_1250\TrackerLog--ArringtonTracker--2017-14-07--12-50.txt';
-%filename = 'Z:\taskcontroller\SCP-CTRL-01\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\PrimatarData\Session_on_20-10--16-04\TrackerLog--EyeLink--2017-20-10--16-04_fixed.txt';
-filename = 'Z:\taskcontroller\SCP-CTRL-01\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\PrimatarData\Session_on_07-11--15-27\TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt';
-
 % PC
-base_dir = fullfile('Z:', 'taskcontroller');
-%filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt');
-%mac
-base_dir = fullfile('/Volumes', 'social_neuroscience_data', 'taskcontroller');
+%base_dir = fullfile('Z:', 'taskcontroller');
+base_dir = fullfile('Y:');
+filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_20190221VW_21-2--16-11', 'TrackerLog--EyeLink--2019-21-02--16-11.txt.Fixed.txt');
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_27-11--11-59', 'TrackerLog--EyeLink--2018-27-11--11-59.txt.Fixed.txt');
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_27-11--12-03', 'TrackerLog--EyeLink--2018-27-11--12-03.txt.Fixed.txt');
 
-filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt');
-filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_09-11--10-51', 'TrackerLog--EyeLink--2017-09-11--10-51.fixed.txt');
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_30-8--14-22', 'TrackerLog--EyeLink--2018-30-08--14-23.txt.Fixed.txt');
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_03-9--09-47', 'TrackerLog--EyeLink--2018-03-09--09-47.txt.Fixed.txt');
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_06-9--14-47', 'TrackerLog--EyeLink--2018-06-09--14-47.txt.Fixed.txt');
+
+%filename = fullfile(base_dir, 'Projekts', 'Primatar', 'PrimatarData', 'Session_on_02-8--11-23', 'TrackerLog--EyeLink--2018-02-08--11-23.txt.Fixed.AU.txt');
+%mac
+%base_dir = fullfile('/Volumes', 'social_neuroscience_data', 'taskcontroller');
+
+%filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt');
+%filename = fullfile(base_dir, 'SCP-CTRL-01', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', 'PrimatarData', 'Session_on_09-11--10-51', 'TrackerLog--EyeLink--2017-09-11--10-51.fixed.txt');
 
 
  
@@ -29,37 +34,36 @@ fixPointY = 348;
 fixPointSize = 204;
 fixPointRect = [fixPointX - fixPointSize/2, fixPointY - fixPointSize/2, fixPointSize, fixPointSize];
            
-imageWidth = 400;
-imageHeight = 400;
+%imageWidth = 300;
+%imageHeight = 300;
+imageWidth = 300*17/20;
+imageHeight = 300;
 imageLeft = fixPointX - imageWidth/2;
 imageTop = fixPointY - imageHeight/2;
 imageRect = [imageLeft, imageTop, imageWidth, imageHeight];             
 
-stimulImage = {fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face1.png'), ...
-               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face2.png'), ...
-               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'face3.png'), ...
-               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'RealistcAvatar.png'), ...
-               fullfile(base_dir, 'Stimuli', 'Primatar', '20170714', 'UnrealisticAvatar.png')};
+stimulImage = {fullfile(base_dir, 'Projekts', 'Primatar', 'images', 'affiliatve_crop_BlockSized_Horz17_Vert20.png'), ...
+               fullfile(base_dir, 'Projekts', 'Primatar', 'images', 'fear_crop_BlockSized_Horz17_Vert20.png'), ...
+               fullfile(base_dir, 'Projekts', 'Primatar', 'images', 'neutral_crop_BlockSized_Horz17_Vert20.png'), ...
+               fullfile(base_dir, 'Projekts', 'Primatar', 'images', 'threat_crop_BlockSized_Horz17_Vert20.png')};
 
-stimulName = {'Real face 1', 'Real face 2', 'Real face 3', 'Realistic avatar', 'Unrealistic avatar'};          
+stimulName = {'Affiliative', 'Fear', 'Neutral', 'Threat'};          
 nStimul = length(stimulName);            
              
 %eyes in image coordinate system
-eyesRect = [95, 70, 190, 70; ...
-           75, 67, 215, 70; ...
-           90, 65, 190, 85; ...
-           85, 65, 200, 70; ...
-           90, 65, 190, 70];  
+eyesRect = [80, 100, 125, 40; ...
+            75, 83,  125, 40; ...
+            77, 95,  125, 40; ...
+            83, 80,  125, 40];  
 %eyes in screen coordinate system         
 eyesRect(:, 1) = eyesRect(:, 1) + imageLeft;     
 eyesRect(:, 2) = eyesRect(:, 2) + imageTop;
 
 %mouth in image coordinate system
-mouthRect = [115, 280, 150, 50; ...
-           85, 260, 150, 50; ...
-           100, 275, 130, 60; ...
-           70, 285, 190, 70; ...
-           65, 290, 200, 60];  
+mouthRect = [75, 205, 115, 80; ...
+             76, 180, 115, 80; ...
+             75, 195, 115, 80; ...
+             80, 195, 115, 80];  
 %mouth in screen coordinate system         
 mouthRect(:, 1) = mouthRect(:, 1) + imageLeft;     
 mouthRect(:, 2) = mouthRect(:, 2) + imageTop;
