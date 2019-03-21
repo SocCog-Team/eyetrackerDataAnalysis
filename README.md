@@ -104,7 +104,11 @@ The stimuli labeling in trial caption has the format 'originalImage - obfuscatio
 
 6.1 **gaussian_attention_map.m** draws fixation heat maps (fixation areas are shown as 2D Gaussian distributions) overlayed with the presented image.
 
-6.2 **display_fixation_proportions.m**
+6.2 **display_fixation_proportions.m** draws two overview firures characterizing the experiment
+- plot of fixation proportions for each stimul as a function of trial number
+- bar graphs of fixation proportions averaged over stimuli presentations
+
+6.3 **draw_error_bar.m** creates a bar graph with grouped bars and (optionally) with confidence intervals
 
 7. auxilary functions
 
@@ -118,4 +122,6 @@ The stimuli labeling in trial caption has the format 'originalImage - obfuscatio
 
 7.5 **compute_time_in_region.m**  calculates total duration and amount of fixations in a specified region (eyes, mouth, etc).
 
-7.6 **fnParseEventIDETrackerLog_simple_v01.m** - eye-tracker file parser
+7.6 **fnParseEventIDETrackerLog_simple_v01.m** - eye-tracker file parser (authors - Igor Kagan, Sebastian Moeller)
+
+7.7 **calc_cihw.m** - function for computing confidence intervales (author - Sebastian Moeller)
