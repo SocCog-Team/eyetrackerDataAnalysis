@@ -91,7 +91,7 @@ function [stimulStat, scrambledStat] = analyse_eyetracker_experiment(filename, .
             % plot overall figures (time cources of fixation proportions and average fixation proportions)
             display_fixation_proportions(sessionName, stimulName, stimulStat, scrambledStat);
         else % plot stats for different obfuscation levels
-            plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue)
+            %plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue)
         end    
     end
 end
@@ -101,6 +101,8 @@ function plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue
     totalObfuscTime = sum(reshape( arrayfun(@(x) sum(x.timeTotal), stimulStat), nDistinctStimul, []));
     totalObfuscNumFix = sum(reshape( arrayfun(@(x) sum(x.numFixTotal), stimulStat), nDistinctStimul, []));
 
+    specStimulStat = stimulStat;
+    
     obfuscLevelName = {'normal', 'medium', 'strong'};
     nObfuscLevel = length(obfuscLevelName);
     regionName = {'Face', 'Eyes', 'Mouth'};
