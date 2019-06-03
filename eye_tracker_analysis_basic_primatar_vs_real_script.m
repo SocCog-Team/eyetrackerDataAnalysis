@@ -62,8 +62,8 @@ scrambledStat = cell(1, nFile);
 nObfuscationLevelToConsider = 0;
 iFile = 1;
 while iFile <= nFile
-     try
-      [stimulStat{iFile}, scrambledStat{iFile}] = analyse_eyetracker_experiment(...
+    try
+      [stimulStat{iFile}, scrambledStat{iFile}, stimulName] = analyse_eyetracker_experiment(...
         files{iFile}, sessionName{iFile}, dyadicPlatformImageTransform(iFile), ...
         nObfuscationLevelToConsider, stimulImage, eyesImageRect, mouthImageRect, plotSetting);         
     catch e        

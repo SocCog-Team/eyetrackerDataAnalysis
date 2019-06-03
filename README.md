@@ -80,11 +80,12 @@ The stimuli labeling in trial caption has the format 'originalImage - obfuscatio
 5.1. ``trial`` - array of structures that contains data about trials for each specified stimulus. Each entry contains the following fields:
 - ``caption`` - full caption of the trial
 - ``fix1Data``, ``fix2Data``, ``scrambledData``, ``stimulusData`` - structures with raw gaze data for each state within the trial. Each of the structures contains the fields
-        - ``GazeX`` - x gaze coordinate;
-        - ``GazeY`` - y gaze coordinate;
-        - ``GazeSpeed`` - gaze speed;
-        - ``GazeTime`` - duration of this data sample;
-        - ``TimeStamp`` - timestamp of this data sample;
+     - ``GazeX`` - x gaze coordinate;
+     - ``GazeY`` - y gaze coordinate;
+     - ``GazeSpeed`` - gaze speed;
+     - ``GazeTime`` - duration of this data sample;
+     - ``TimeStamp`` - timestamp of this data sample;
+     
 ``trial`` data is extracted from the eye-tracker log file by means of ``read_primatar_data_from_file`` function        
         
 5.2. ``fixation`` - array of structures that contains fixation data for the trial parts related to a specified state, for the trials corresponding to a specified stimuli. Each structure describe single trial and contains three fields:
