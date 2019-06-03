@@ -1,11 +1,16 @@
 clear all
+dbstop if error
 %------------ specify files to be analysed ------------
 if (ispc)
-    baseDir = fullfile('Y:');
+    baseDir = fullfile('C:');
+    fullDir = fullfile(baseDir, 'SCP_CODE', 'eyetrackerDataAnalysis');
+    baseDir = fullfile('X:', 'rhesus expressions');
+    fullDir = fullfile(baseDir, 'PrimatarData_from_social_neuroscience_data'); 
 else    
     baseDir = fullfile('/Volumes', 'social_neuroscience_data', 'taskcontroller');
+    fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
 end
-fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
+% fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
 
 files = {fullfile(fullDir, 'Cornelius_20170714_1250', 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt'), ...         
          fullfile(fullDir, 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt'), ...
@@ -54,10 +59,10 @@ plotSetting = struct('initialFix', true,...
 % ------------ analyse all experiments ------------
 stimulStat = cell(1, nFile);
 scrambledStat = cell(1, nFile);
-nObfuscationLevelToConsider = 2;
+nObfuscationLevelToConsider = 0;
 iFile = 1;
 while iFile <= nFile
-    try
+     try
       [stimulStat{iFile}, scrambledStat{iFile}] = analyse_eyetracker_experiment(...
         files{iFile}, sessionName{iFile}, dyadicPlatformImageTransform(iFile), ...
         nObfuscationLevelToConsider, stimulImage, eyesImageRect, mouthImageRect, plotSetting);         
@@ -73,3 +78,21 @@ while iFile <= nFile
     end
     iFile = iFile + 1;
 end
+
+% save the stimulStat
+concat_session_names = [];
+for i_session = 1 : length(sessionName)
+    concat_session_names = [concat_session_names, sessionName{i_session}];
+end
+
+outfile_name = ['stimulStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concat_session_names, '.mat'];
+save(fullfile(pwd, outfile_name), 'stimulStat');
+save(fullfile(fullDir, outfile_name), 'stimulStat');
+
+outfile_name = ['scrambledStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concat_session_names, '.mat'];
+save(fullfile(pwd, outfile_name), 'scrambledStat');
+save(fullfile(fullDir, outfile_name), 'scrambledStat');
+
+disp('Done');
+
+
