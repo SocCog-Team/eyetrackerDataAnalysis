@@ -10,7 +10,8 @@ else
     baseDir = fullfile('/Volumes', 'social_neuroscience_data', 'taskcontroller');
     fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
 end
-% fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
+%baseDir = fullfile('Y:');
+%fullDir = fullfile(baseDir, 'Projekts', 'Primatar', 'PrimatarData'); 
 
 files = {fullfile(fullDir, 'Cornelius_20170714_1250', 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt'), ...         
          fullfile(fullDir, 'Session_on_07-11--15-27', 'TrackerLog--EyeLink--2017-07-11--15-27_fixed.txt'), ...
@@ -54,18 +55,21 @@ plotSetting = struct('initialFix', true,...
                      'perTrialAttentionMap', true, ...
                      'averageAttentionMap', true, ...
                      'nTrial', 8,...
-                     'summary', true);
+                     'summary', true, ...
+                     'fontSize', 14, ...
+                     'fontName', 'Arial');
 
 % ------------ analyse all experiments ------------
 stimulStat = cell(1, nFile);
 scrambledStat = cell(1, nFile);
-nObfuscationLevelToConsider = 0;
+nObfuscationLevelToConsider = 3;
 iFile = 1;
 while iFile <= nFile
+    
     try
-      [stimulStat{iFile}, scrambledStat{iFile}, stimulName] = analyse_eyetracker_experiment(...
-        files{iFile}, sessionName{iFile}, dyadicPlatformImageTransform(iFile), ...
-        nObfuscationLevelToConsider, stimulImage, eyesImageRect, mouthImageRect, plotSetting);         
+        [stimulStat{iFile}, scrambledStat{iFile}, stimulName] = analyse_eyetracker_experiment(...
+         files{iFile}, sessionName{iFile}, dyadicPlatformImageTransform(iFile), ...
+         nObfuscationLevelToConsider, stimulImage, eyesImageRect, mouthImageRect, plotSetting);         
     catch e        
         if (strcmp(e.identifier, 'MATLAB:print:ProblemGeneratingOutput'))
             disp(['An server connection error occurred while parsing file ' files{iFile}]);
@@ -76,22 +80,23 @@ while iFile <= nFile
             e.message
         end        
     end
+   
     iFile = iFile + 1;
 end
 
 % save the stimulStat
-concat_session_names = [];
-for i_session = 1 : length(sessionName)
-    concat_session_names = [concat_session_names, sessionName{i_session}];
+concatSessionNames = [];
+for iSession = 1 : length(sessionName)
+    concatSessionNames = [concatSessionNames, sessionName{iSession}];
 end
 
-outfile_name = ['stimulStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concat_session_names, '.mat'];
-save(fullfile(pwd, outfile_name), 'stimulStat');
-save(fullfile(fullDir, outfile_name), 'stimulStat');
+outFileName = ['stimulStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concatSessionNames, '.mat'];
+save(fullfile(pwd, outFileName), 'stimulStat');
+save(fullfile(fullDir, outFileName), 'stimulStat');
 
-outfile_name = ['scrambledStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concat_session_names, '.mat'];
-save(fullfile(pwd, outfile_name), 'scrambledStat');
-save(fullfile(fullDir, outfile_name), 'scrambledStat');
+outFileName = ['scrambledStat.nObfuscationLevels_', num2str(nObfuscationLevelToConsider), '.', concatSessionNames, '.mat'];
+save(fullfile(pwd, outFileName), 'scrambledStat');
+save(fullfile(fullDir, outFileName), 'scrambledStat');
 
 disp('Done');
 

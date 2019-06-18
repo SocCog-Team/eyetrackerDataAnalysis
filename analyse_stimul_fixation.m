@@ -4,8 +4,7 @@ function [stimulStat, scrambledStat] = analyse_stimul_fixation(trial, ...
 % analyses raw gazes and fixations during presentations of stimuli images and scrambled images
 % makes the plots and computes statistics
 			
-fontSize = 14;
-fontName = 'Arial';
+
 imageWidth = imageRect(3);
 imageHeight = imageRect(4);
 nStimul = length(stimulCaption);
@@ -24,7 +23,7 @@ for iStimul = 1:nStimul % for every stimulus
     stimulRaw = bound_gaze_pos(stimulRaw, screenRect);    
     stimulStat(iStimul) = compute_fixation_statistic(stimulFix{iStimul}, pValue, screenRect, ...
         imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :));
-    stimulStat(iStimul).trialIndex = trialIndices;    
+    stimulStat(iStimul).trialIndex = trialIndices';    
     
     % generate titles for figures
     trialIndicesAsStr = arrayfun(@num2str, trialIndices, 'UniformOutput', false);
@@ -35,10 +34,10 @@ for iStimul = 1:nStimul % for every stimulus
         
     % plot fixations   
     if (plotSetting.perTrialAttentionMap)
-        drawAllAttentionMapsPerStimul(stimulCaption{iStimul}, fixationDetector, stimulFix{iStimul}, stimulRaw, scaledImage{iStimul}, imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :), trialCaption, sessionName, fontSize, fontName);
+        drawAllAttentionMapsPerStimul(stimulCaption{iStimul}, fixationDetector, stimulFix{iStimul}, stimulRaw, scaledImage{iStimul}, imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :), trialCaption, sessionName, plotSetting.fontSize, plotSetting.fontName);
     end    
     if (plotSetting.rawFix)
-        drawRawFixationPerStimul(stimulCaption{iStimul}, stimulRaw, scaledImage{iStimul}, imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :), trialCaption, sessionName, fontSize, fontName);
+        drawRawFixationPerStimul(stimulCaption{iStimul}, stimulRaw, scaledImage{iStimul}, imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :), trialCaption, sessionName, plotSetting.fontSize, plotSetting.fontName);
     end
     
     % compute gaze positions for the scrambled    
@@ -46,15 +45,15 @@ for iStimul = 1:nStimul % for every stimulus
     scrambledFix{iStimul} = bound_gaze_pos(scrambledFix{iStimul}, screenRect);
     scrambledStat(iStimul) = compute_fixation_statistic(scrambledFix{iStimul}, pValue, screenRect, ...
         imageRect, eyesRect(iStimul, :), mouthRect(iStimul, :));
-    scrambledStat(iStimul).trialIndex = trialIndices;
+    scrambledStat(iStimul).trialIndex = trialIndices';
 end
 
 % plot average attention maps per stimuli
 if (plotSetting.averageAttentionMap)
     nTrialToShow = plotSetting.nTrial;
-    drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, stimulFix, scaledImage, imageRect, eyesRect, mouthRect, nTrialToShow, sessionName, 'AverageStimuliAttentionMap', fontSize, fontName);      
+    drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, stimulFix, scaledImage, imageRect, eyesRect, mouthRect, nTrialToShow, sessionName, 'AverageStimuliAttentionMap', plotSetting.fontSize, plotSetting.fontName);      
 %    scrambledTitle
-    drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, scrambledFix, scaledImage, imageRect, eyesRect, mouthRect, nTrialToShow, sessionName, 'AverageScrambledAttentionMap', fontSize, fontName);      
+    drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, scrambledFix, scaledImage, imageRect, eyesRect, mouthRect, nTrialToShow, sessionName, 'AverageScrambledAttentionMap', plotSetting.fontSize, plotSetting.fontName);      
 end
 
 %{

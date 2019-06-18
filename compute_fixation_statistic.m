@@ -40,10 +40,10 @@ function stat = compute_fixation_statistic(fixationStruct, pValue, screenRect, i
     normalizedFixNum = stat.(['numFixOn' region])/mean(stat.numFixTotal);    
     stat.(['confIntFixOn' region])  = calc_cihw(std(normalizedFixNum), length(normalizedFixNum), pValue);
 
-    % comute frequency of first fixation in the region
+    % compute frequency of first fixation in the region
     stat.(['freqFirstFixOn' region]) = mean(stat.(['isFirstFixOn' region]));    
   end
   
   %preallocate trialIndices (filled outside of the function)
-  stat.trialIndex = 1:length(stat.timeTotal); 
+  stat.trialIndex = (1:length(stat.timeTotal))'; 
 end

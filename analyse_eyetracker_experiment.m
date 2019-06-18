@@ -67,7 +67,7 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
     % analyse gaze for stimuli
     if (nObfuscationLevelToConsider == 1) || (nObfuscationLevelToConsider == 2)  || (nObfuscationLevelToConsider == 3)
        stimulName = {'Real face 1', 'Real face 2', 'Real face 3', 'Realistic avatar', 'Unrealistic avatar'};          
-
+       stimulImageForAnalysis = stimulImage;
     else % ignore stimuli and compare obfuscation levels only
         % analyse trials grouped by presented image (taking obfuscatio into account)       
         stimulName = {'Real face 1 - Normal', 'Real face 2 - Normal', 'Real face 3 - Normal', ... 
@@ -76,13 +76,13 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
                       'Realistic avatar - Moderate obfuscation', 'Unrealistic avatar  - Moderate obfuscation', ...
                       'Real face 1 - Strong obfuscation', 'Real face 2 - Strong obfuscation',  'Real face 3 - Strong obfuscation', ...
                       'Realistic avatar  - Strong obfuscation', 'Unrealistic avatar  - Strong obfuscation'};          
-        stimulImage = [stimulImage, stimulImage, stimulImage];
+        stimulImageForAnalysis = [stimulImage, stimulImage, stimulImage];
         eyesRect = [eyesRect; eyesRect; eyesRect];
         mouthRect = [mouthRect; mouthRect; mouthRect];
     end   
     pValue = 0.05;
     [stimulStat, scrambledStat] = analyse_stimul_fixation(trial, stimulName, ...
-        pValue, stimulImage, fixationDetector, screenRect, imageRect, eyesRect, mouthRect, plotSetting, sessionName);
+        pValue, stimulImageForAnalysis, fixationDetector, screenRect, imageRect, eyesRect, mouthRect, plotSetting, sessionName);
 
     
     % -------------- plot final statistics --------------
@@ -91,57 +91,81 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
             % plot overall figures (time cources of fixation proportions and average fixation proportions)
             display_fixation_proportions(sessionName, stimulName, stimulStat, scrambledStat);
         else % plot stats for different obfuscation levels
-            %plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue)
+            obfuscLevelName = {'normal', 'medium', 'strong'};
+			stimulStat = computeStatitisticForEachObfuscationLevel(stimulStat, stimulImage, obfuscLevelName, pValue);
+			scrambledStat = computeStatitisticForEachObfuscationLevel(scrambledStat, stimulImage, obfuscLevelName, pValue);
+            plotObfuscationStatitistic(stimulStat, sessionName, obfuscLevelName, plotSetting.fontSize, plotSetting.fontName);
         end    
     end
 end
-    
-function plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue)
+
+
+function totalObfusc = computeStatitisticForEachObfuscationLevel(stimulStat, stimulImage, obfuscLevelName, pValue)    
     nDistinctStimul = length(stimulImage);
     totalObfuscTime = sum(reshape( arrayfun(@(x) sum(x.timeTotal), stimulStat), nDistinctStimul, []));
-    totalObfuscNumFix = sum(reshape( arrayfun(@(x) sum(x.numFixTotal), stimulStat), nDistinctStimul, []));
+    totalObfuscNumFix = sum(reshape( arrayfun(@(x) sum(x.numFixTotal), stimulStat), nDistinctStimul, []));   
 
     specStimulStat = stimulStat;
+        
+    nObfuscLevel = length(obfuscLevelName);    
+    obfuscTime = cell(nObfuscLevel, 1);
+    obfuscFix = cell(nObfuscLevel, 1);
+    obfuscIsFirstFix = cell(nObfuscLevel, 1);
     
-    obfuscLevelName = {'normal', 'medium', 'strong'};
-    nObfuscLevel = length(obfuscLevelName);
     regionName = {'Face', 'Eyes', 'Mouth'};
     nRegion = length(regionName);
-    for iRegion = 1:nRegion
-        region = regionName{iRegion};
-        obfuscTime = cell(nObfuscLevel, 1);
-        obfuscFix = cell(nObfuscLevel, 1);
-        for iLevel = 1:nObfuscLevel
-            levelIndex = (nDistinctStimul*(iLevel - 1) + 1):(nDistinctStimul*iLevel);
+    
+    for iLevel = 1:nObfuscLevel
+        levelIndex = (nDistinctStimul*(iLevel - 1) + 1):(nDistinctStimul*iLevel);
+
+        totalObfusc(iLevel).timeTotal  = vertcat(specStimulStat(levelIndex).timeTotal);
+    	totalObfusc(iLevel).numFixTotal = vertcat(specStimulStat(levelIndex).numFixTotal);
+        totalObfusc(iLevel).trialIndex = vertcat(specStimulStat(levelIndex).trialIndex); 
+        
+        for iRegion = 1:nRegion
+            region = regionName{iRegion};
+
             obfuscTime{iLevel} = vertcat(specStimulStat(levelIndex).(['timeOn' region]));
             obfuscFix{iLevel} = vertcat(specStimulStat(levelIndex).(['numFixOn' region]));
+            obfuscIsFirstFix{iLevel} = vertcat(specStimulStat(levelIndex).(['isFirstFixOn' region]));
+            
+            totalObfusc(iLevel).(['timeOn' region]) = obfuscTime{iLevel};
+            totalObfusc(iLevel).(['numFixOn' region]) = obfuscFix{iLevel};
+            totalObfusc(iLevel).(['isFirstFixOn' region]) = obfuscIsFirstFix{iLevel};
+            
+            totalObfusc(iLevel).(['shareTimeOn' region]) = sum(obfuscTime{iLevel})/totalObfuscTime(iLevel);
+            totalObfusc(iLevel).(['shareFixOn' region]) = sum(obfuscFix{iLevel})/totalObfuscNumFix(iLevel);
 
             normalizedTime = obfuscTime{iLevel}/mean(vertcat(specStimulStat(levelIndex).timeTotal));
-            totalObfusc.(['confIntTime' region])(iLevel) = calc_cihw(std(normalizedTime), length(normalizedTime), pValue);
+            totalObfusc(iLevel).(['confIntTimeOn' region]) = calc_cihw(std(normalizedTime), length(normalizedTime), pValue);
             normalizedFixNum = obfuscFix{iLevel}/mean(vertcat(specStimulStat(levelIndex).numFixTotal));
-            totalObfusc.(['confIntFix' region])(iLevel) = calc_cihw(std(normalizedFixNum), length(normalizedFixNum), pValue);
+            totalObfusc(iLevel).(['confIntFixOn' region]) = calc_cihw(std(normalizedFixNum), length(normalizedFixNum), pValue);
+            
+            % compute frequency of first fixation in the region
+            totalObfusc(iLevel).(['freqFirstFixOn' region]) = mean(totalObfusc(iLevel).(['isFirstFixOn' region]));    
+            
+            % compute overall shares of duration and number of fixation in the region
+            totalObfusc(iLevel).(['totalShareTimeOn' region]) = sum(totalObfusc(iLevel).(['timeOn' region]))/sum(totalObfusc(iLevel).timeTotal);
+            totalObfusc(iLevel).(['totalShareFixOn' region]) = sum(totalObfusc(iLevel).(['numFixOn' region]))/sum(totalObfusc(iLevel).numFixTotal);
         end
-
-        totalObfusc.(['ShareTime' region]) = cellfun(@sum, obfuscTime)'./totalObfuscTime;
-        totalObfusc.(['ShareFix' region]) = cellfun(@sum, obfuscFix)'./totalObfuscNumFix;
     end
-
-    FontSize = 12;
-    fontName = 'Arial';
+end
+    
+function plotObfuscationStatitistic(totalObfusc, sessionName, obfuscLevelName, fontSize, fontName)      
     plotTitle = {'proportions of fixation number (stimuli)', 'proportions of fixation duration (stimuli)'};
     regionName = {'to face', 'to eyes', 'to mouth'};
     nRegion = length(regionName);
 
     figure('Name', 'Total shares of fixations (per obfucation level)');
-    set( axes,'fontsize', FontSize, 'FontName', fontName);
+    set( axes,'fontsize', fontSize, 'FontName', fontName);
     for iPlot = 1:2
         subplot(2, 1, iPlot);
         if (iPlot == 1)
-            barData = [totalObfusc.ShareFixFace; totalObfusc.ShareFixEyes; totalObfusc.ShareFixMouth];
-            confInt = [totalObfusc.confIntFixFace; totalObfusc.confIntFixEyes; totalObfusc.confIntFixMouth];
+            barData = [totalObfusc.shareFixOnFace; totalObfusc.shareFixOnEyes; totalObfusc.shareFixOnMouth];
+            confInt = [totalObfusc.confIntFixOnFace; totalObfusc.confIntFixOnEyes; totalObfusc.confIntFixOnMouth];
         else
-            barData = [totalObfusc.ShareTimeFace; totalObfusc.ShareTimeEyes; totalObfusc.ShareTimeMouth];
-            confInt = [totalObfusc.confIntTimeFace; totalObfusc.confIntTimeEyes; totalObfusc.confIntTimeMouth];
+            barData = [totalObfusc.shareTimeOnFace; totalObfusc.shareTimeOnEyes; totalObfusc.shareTimeOnMouth];
+            confInt = [totalObfusc.confIntTimeOnFace; totalObfusc.confIntTimeOnEyes; totalObfusc.confIntTimeOnMouth];
         end
         barHandle = draw_error_bar(barData, confInt);    
         legend_handleMain = legend(barHandle, obfuscLevelName, 'location', 'NorthEast'); 
@@ -159,5 +183,5 @@ function plotObfuscationStatitistic(stimulStat, stimulImage, sessionName, pValue
     xLeft = 0; yTop = 0;
     set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
     print ( '-depsc', '-r300', fullfile(sessionName, 'obfuscationEffect.eps'));
-    end
+end
  
