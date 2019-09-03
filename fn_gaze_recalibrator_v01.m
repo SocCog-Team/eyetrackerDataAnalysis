@@ -1,4 +1,4 @@
-function [ registration_struct ] = fn_gaze_recalibrator(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N)
+function [ registration_struct ] = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N)
 %FN_GAZE_RECALIBRATOR Analyse simple dot following gaze mapping data to
 %generate better registration matrices to convert "raw" gaze data into
 %eventIDE pixel coordinates
