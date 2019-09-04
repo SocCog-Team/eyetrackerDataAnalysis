@@ -107,13 +107,23 @@ function drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, stim
     % plot averaged heat maps
     nStimul = length(stimulCaption);    
     nCol = floor(sqrt(2*nStimul));
+	
+	if nStimul == 5
+		nCol = 5;
+	end
+	
     nRow = ceil(nStimul/nCol);    
     plotHandle = gobjects(nStimul, 1);
+	output_type = '.pdf';
     
     areaToShow = [imageRect(1), imageRect(1) + imageRect(3), imageRect(2), imageRect(2) + imageRect(4)];
     
     %all hit maps
     figure('Name', figureName);
+	[output_rect] = fnFormatPaperSize('Plos_half_page', gcf, 1/2.54);
+	set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
+	
     set( axes,'fontSize', fontSize, 'FontName', fontName);
     for iStimul = 1:nStimul
         if isempty(nTrialToShow)
@@ -141,7 +151,7 @@ function drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, stim
         axis(areaToShow);
         title(titleText, 'fontSize', fontSize - 4, 'FontName', fontName);
     end
-    tickLabel = fixationDetector.durationThreshold*[0.4 1 2 4 8]/2;
+    tickLabel = fixationDetector.durationThreshold*[0.4 2 8]/2;
     tickValue = 0.75*log(1 + 4*tickLabel/fixationDetector.durationThreshold)/log(3);    
     colormap(parula(256))
     pos = get(plotHandle(nStimul), 'Position');
@@ -150,17 +160,18 @@ function drawAverageAttentionMapAllStimuli(stimulCaption, fixationDetector, stim
         'Ticks', tickValue/2, ...
         'TickLabels', cellstr(num2str(tickLabel')),...
         'fontSize', fontSize, 'FontName', 'Arial');
-    ylabel(h, 'mean fixation time [ms]', 'fontSize', fontSize, 'FontName', fontName);
+    ylabel(h, 'mean fixation time [ms]', 'fontSize', fontSize-4, 'FontName', fontName);
     
-    set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );    
+    %set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );    
     if (isempty(nTrialToShow)) || (nTrialToShow < max(cellfun(@length, stimulFix)))
         % if all trials were used for averaging - tell this in the name
-        outputFilename = fullfile(sessionName, [figureName, '_average_all']);
+        outputFilename = fullfile(sessionName, [figureName, '_average_all', output_type]);
     else
         % otherwise specify the mumber of trials actually used
-        outputFilename = fullfile(sessionName, [figureName, '_average_first', num2str(nTrialToShow)]);                
+        outputFilename = fullfile(sessionName, [figureName, '_average_first', num2str(nTrialToShow), output_type]);                
     end
-    print('-dpdf', outputFilename, '-r600');
+    %print('-dpdf', outputFilename, '-r600');
+	write_out_figure(gcf(), fullfile(outputFilename));
 end
 
 
@@ -172,6 +183,9 @@ function drawAllAttentionMapsPerStimul(stimulName, fixationDetector, stimulFix, 
     nTrialRow = ceil(nTrial/nTrialCol);    
     %all hit maps
     figure('Name', [stimulName, ' - Gaussian attention maps'])
+	[output_rect] = fnFormatPaperSize('Plos_max', gcf, 1/2.54);
+	set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
     set( axes,'fontsize', fontSize, 'FontName', fontName);
     for iTrial = 1:nTrial
         subplot(nTrialRow, nTrialCol, iTrial);
@@ -188,11 +202,12 @@ function drawAllAttentionMapsPerStimul(stimulName, fixationDetector, stimulFix, 
         axis(areaToShow);
         title(trialCaption(:, iTrial), 'fontsize', fontSize-4, 'FontName', fontName);
     end
-    set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
+    %set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
     outputFilename = stimulName;
     outputFilename(stimulName == ' ') = [];
     outputFilename = fullfile(sessionName, [outputFilename, '_rawAll.pdf']);
-    print('-dpdf', outputFilename, '-r600');
+    %print('-dpdf', outputFilename, '-r600');
+	write_out_figure(gcf(), fullfile(outputFilename));
 end
 
 function drawRawFixationPerStimul(stimulName, stimulRaw, scaledImage, imageRect, eyesRect, mouthRect, trialCaption, sessionName, fontSize, fontName)    
@@ -210,6 +225,9 @@ function drawRawFixationPerStimul(stimulName, stimulRaw, scaledImage, imageRect,
     outputFilename(stimulName == ' ') = [];
     
     figure('Name', [stimulName, ' - Raw gaze heat maps'])
+	[output_rect] = fnFormatPaperSize('Plos_max', gcf, 1/2.54);
+	set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
     nHorizBin = ceil((max(xRaw) - min(xRaw) + 1)/8);
     nVertBin = ceil((max(yRaw) - min(yRaw) + 1)/8);
 
@@ -227,11 +245,16 @@ function drawRawFixationPerStimul(stimulName, stimulRaw, scaledImage, imageRect,
         axis(areaToShow);
         title(trialCaption(:, iTrial), 'fontSize', fontSize-4, 'FontName',fontName, 'Interpreter', 'latex');
     end
-    set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
-    print('-dpdf', fullfile(sessionName, [outputFilename, '_raw.pdf']), '-r600');
+    %set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );
+    %print('-dpdf', fullfile(sessionName, [outputFilename, '_raw.pdf']), '-r600');
+	write_out_figure(gcf(), fullfile(sessionName, [outputFilename, '_raw.pdf']));
+
     
     
     figure('Name', [stimulName, ' - raw gaze heat map over all presentations'])
+	[output_rect] = fnFormatPaperSize('Plos_max', gcf, 1/2.54);
+	set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
     set( axes,'fontSize', fontSize, 'FontName', fontName);
     set(gca, 'YDir', 'reverse','fontSize', fontSize, 'FontName', fontName);
     hold on;
@@ -240,8 +263,10 @@ function drawRawFixationPerStimul(stimulName, stimulRaw, scaledImage, imageRect,
         histogram2(xRaw,yRaw, [nHorizBin, nVertBin],'DisplayStyle','tile','ShowEmptyBins','off');
     end
     hold off;
-    set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );    
-    print('-dpdf', fullfile(sessionName, [outputFilename, '_rawAll.pdf']), '-r600');
+    %set( gcf,'PaperUnits','centimeters', 'PaperPosition', [ 0 0 29 21 ],'PaperOrientation','landscape' );    
+    %print('-dpdf', fullfile(sessionName, [outputFilename, '_rawAll.pdf']), '-r600');
+	write_out_figure(gcf(), fullfile(sessionName, [outputFilename, '_rawAll.pdf']));
+
 end
 
 

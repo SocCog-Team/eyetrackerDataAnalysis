@@ -25,6 +25,11 @@ nStimCol = floor(sqrt(2*nStimul));
 nStimRow = ceil(nStimul/nStimCol);
 regionLabel = {'to ROI', 'to eyes'};
 figure('Name', 'Trial-wise shares of fixations');
+
+[output_rect] = fnFormatPaperSize('Plos', gcf, 1/2.54);
+set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
+
 set( axes,'fontSize', fontSize, 'FontName', fontName);
 for iStimul = 1:nStimul
     subplot(nStimRow, nStimCol, iStimul);
@@ -41,12 +46,12 @@ for iStimul = 1:nStimul
     set(legend_handleMain, 'fontSize', fontSize-2, 'FontName',fontName);
     title(stimulName{iStimul}, 'fontSize', fontSize-2, 'FontName',fontName);
 end
-set( gcf, 'PaperUnits','centimeters' );
-xSize = 36; ySize = 24;
-xLeft = 0; yTop = 0;
-set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
-print ( '-depsc', '-r300', 'timeCourse.eps');
-
+% set( gcf, 'PaperUnits','centimeters' );
+% xSize = 36; ySize = 24;
+% xLeft = 0; yTop = 0;
+% set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
+%print( '-depsc', '-r300', 'timeCourse.eps');
+write_out_figure(gcf(), 'timeCourse.pdf');
 
 % prepare to draw the bar graphs of fixation proportions:
 % fill tables with fixation data for all regions
@@ -79,8 +84,11 @@ plotTitle = {'proportions of fixation durations (stimuli)', ...
              'first fixation rate (scrambled)'};
              
 figure('Name', 'Fixation proportions');
+[output_rect] = fnFormatPaperSize('Plos', gcf, 1/2.54);
+set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+
 set( axes,'fontSize', fontSize, 'FontName',fontName);
-maxValue = 1.29;       
+maxValue = 1.0;       
 for iPlot = 1:6   
     % prepare data for the plot
     if ((iPlot == 3) || (iPlot == 6))
@@ -107,19 +115,34 @@ for iPlot = 1:6
     
     subplot(2, 3, iPlot);
     barHandle = draw_error_bar(barData, confInt);    
-    legend_handleMain = legend(barHandle, stimulName, 'location', 'NorthEast'); 
-    set(legend_handleMain, 'fontsize', fontSize-1, 'FontName', fontName);%, 'FontName','Times', 'Interpreter', 'latex');
-    pos = get(legend_handleMain, 'Position');
-    set(legend_handleMain, 'Position', [pos(1) + 0.1, pos(2) + 0.07, pos(3:4)]);
-    legend boxoff 
+%     legend_handleMain = legend(barHandle, stimulName, 'location', 'NorthEast'); 
+%     set(legend_handleMain, 'fontsize', fontSize-1, 'FontName', fontName);%, 'FontName','Times', 'Interpreter', 'latex');
+%     pos = get(legend_handleMain, 'Position');
+%     set(legend_handleMain, 'Position', [pos(1) + 0.1, pos(2) + 0.07, pos(3:4)]);
+%     legend boxoff 
     axis([0.5, nRegion + 0.5, 0, maxValue + 0.1]);
     set( gca, 'XTick', 1:nRegion, 'XTickLabel', regionName, 'YTick', 0:0.2:1, 'fontsize', fontSize, 'FontName',fontName);  
     title(plotTitle(iPlot), 'fontSize', fontSize, 'FontName',fontName);
 end   
-set( gcf, 'PaperUnits','centimeters' );
-xSize = 36; ySize = 24;
-xLeft = 0; yTop = 0;
-set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
-print ( '-depsc', '-r300', fullfile(sessionName, 'barPlot.eps'));
+
+
+
+
+% set( gcf, 'PaperUnits','centimeters' );
+% xSize = 36; ySize = 24;
+% xLeft = 0; yTop = 0;
+% set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
+%print( '-depsc', '-r300', fullfile(sessionName, 'barPlot.eps'));
+write_out_figure(gcf(), fullfile(sessionName, 'Fixation_by_image_class_barPlot.pdf'))
+
+legend_handleMain = legend(barHandle, stimulName, 'location', 'NorthEast');
+set(legend_handleMain, 'fontsize', fontSize-1, 'FontName', fontName);%, 'FontName','Times', 'Interpreter', 'latex');
+%pos = get(legend_handleMain, 'Position');
+%set(legend_handleMain, 'Position', [pos(1) + 0.1, pos(2) + 0.07, pos(3:4)]);
+legend boxoff
+
+write_out_figure(gcf(), fullfile(sessionName, 'Fixation_by_image_class_barPlot.legend.pdf'))
+
+
 end
 

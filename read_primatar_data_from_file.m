@@ -1,7 +1,7 @@
 function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename, needCorrectTimeStamps)
 % read_primatar_data_from_file reads data of primatar experiment trials from a
 % single EVENT IDE eye-tracker file and stores it in a dataset and in a structures describing trials.
-% Each trial consists of the following stages: 
+% Each trial consists of the following stages:
 % 1) first initial fixation
 % 2) first reward
 % 3) viewing real face
@@ -18,7 +18,7 @@ function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename
 %   - dataTable - contents of the file in a dataset form. Additionally time
 %    (difference of time stamps) and gaze speed are computed for each data
 %    sample.
-%   - trialStruct - structure containing indices of various events in dataTable. 
+%   - trialStruct - structure containing indices of various events in dataTable.
 %     Contains the following fields:
 %      - fix1Start -- indices of first initial fixations onsets;
 %      - fix1End -- indices of first initial fixations ends;
@@ -28,9 +28,9 @@ function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename
 %      - scrambledEnd -- indices of scrambled image presentations ends;
 %      - stimulStart -- indices of stimulus image presentations onsets;
 %      - stimulEnd -- indices of stimulus image presentations ends;
-%      - trialCaption - full caption for each trial (describes the stimuli 
+%      - trialCaption - full caption for each trial (describes the stimuli
 %        presented at this trial, contents of the UserField row of dataTable)
-%   - trial - array of structures containing data about trials for each specified stimulus. 
+%   - trial - array of structures containing data about trials for each specified stimulus.
 %     Each entry contains the following fields:
 %      - caption - full caption of the trial (coincides with corresponding element of trialCaption)
 %      - fix1Data, fix2Data, scrambledData, stimulusData - structures wtih
@@ -41,92 +41,142 @@ function [dataTable, trialStruct, trial] = read_primatar_data_from_file(filename
 %         - GazeTime - duration of this data sample;
 %         - TimeStamp - timestamp of this data sample;
 %
-% EXAMPLE of use 
+% EXAMPLE of use
 % filename = 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt';
-% normStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face 3 - Normal 0', ... 
-%                   'Realistic avatar - Normal 1', 'Unrealistic avatar - Normal 2'};          
-% [normTrial, ~, normTrialStruct] = parse_eye_tracker_file(filename, normStimulName, true);      
+% normStimulName = {'Real face 1 - Normal 0', 'Real face 2 - Normal 0', 'Real face 3 - Normal 0', ...
+%                   'Realistic avatar - Normal 1', 'Unrealistic avatar - Normal 2'};
+% [normTrial, ~, normTrialStruct] = parse_eye_tracker_file(filename, normStimulName, true);
 %
-  if (~isempty(strfind(filename, 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt')))
-    logVersion = 'Primatar_20170714';
-  elseif (~isempty(strfind(filename, 'TrackerLog--EyeLink--2017'))) 
-    logVersion = 'Primatar_20171020';
-  else 
-    logVersion = 'Primatar_20180802';
-  end  
-  dataTable = fnParseEventIDETrackerLog_simple_v01(filename, logVersion);   
-  dataTable.CurrentEvent = categorical(dataTable.CurrentEvent);
-  
-  [~, ~, stateIndex]  = unique(dataTable.CurrentEvent);
-  %[allStates, ~, stateIndex]  = unique(dataTable.CurrentEvent);
-  %[allStimuli, ~, stimuliIndices] = unique(dataTable.UserField);
-  
-  %compute gaze speed
-  dt = diff(dataTable.EventIDETimeStamp);
-  
-  if (needCorrectTimeStamps)
-    nTimestamps = length(dt);
-    lastCorrect = 0;
-    for i = 1:nTimestamps - 1
-      if ((dt(i) > 0) && (dt(i+1) == 0))
-        lastCorrect = i;
-      elseif (((dt(i) == 0) && (dt(i+1) > 0)) && (lastCorrect > 0))
-        meanDT = (dataTable.EventIDETimeStamp(i+1) - dataTable.EventIDETimeStamp(lastCorrect))/(i + 1 - lastCorrect);
-        dataTable.EventIDETimeStamp(lastCorrect:i+1) = ...
-              dataTable.EventIDETimeStamp(lastCorrect):meanDT:dataTable.EventIDETimeStamp(i+1);
-        dt(lastCorrect:i) = meanDT;
-      end  
-    end
-  end
-  dt(dt == 0) = 0.001; %replace zero by 1 us to avoid division by zero
-  dataTable.GazeTime = ([dt(1); dt] + [dt; dt(end)])/2;
-  
-  %compute gaze speed in pixels/s
-  speed = sqrt(diff(dataTable.GazeX).^2 + diff(dataTable.GazeY).^2)./dt;
-  dataTable.GazeSpeed = [speed; 0]; %last value of speed is set to zero
-  
-  %create trials
-  %define borders of the states
-  stateChange = stateIndex(2:end) - stateIndex(1:end-1);
-  stateChange(stateChange ~= 0) = 1; 
-  stateStart = [0; stateChange];
-  stateEnd = [stateChange; 0];
-  
-  fixationStart = find((stateStart == 1) & ((dataTable.CurrentEvent == 'Top event>Fix 1') | (dataTable.CurrentEvent == 'Top event>Fix 2')));
-  fixationEnd = find((stateEnd == 1) & ((dataTable.CurrentEvent == 'Top event>Fix 1') | (dataTable.CurrentEvent == 'Top event>Fix 2')));
+if (~isempty(strfind(filename, 'TrackerLog--ArringtonTracker--2017-14-07--12-50.txt')))
+	logVersion = 'Primatar_20170714';
+elseif (~isempty(strfind(filename, 'TrackerLog--EyeLink--2017')))
+	logVersion = 'Primatar_20171020';
+else
+	logVersion = 'Primatar_20180802';
+end
+dataTable = fnParseEventIDETrackerLog_simple_v01(filename, logVersion);
 
-  trialStruct = struct('fix1Start', fixationStart(1:2:end), ...  % uneven fixations indicate trial start 
-                       'fix1End', fixationEnd(1:2:end), ...
-                       'fix2Start', fixationStart(2:2:end), ...  % even fixations are before stimulus presentations
-                       'fix2End', fixationEnd(2:2:end), ...
-                       'scrambledStart', find((stateStart == 1) & (dataTable.CurrentEvent == 'Top event>Scrambled Face')), ...
-                       'scrambledEnd', find((stateEnd == 1) & (dataTable.CurrentEvent == 'Top event>Scrambled Face')), ...
-                       'stimulStart', find((stateStart == 1) & (dataTable.CurrentEvent == 'Top event>Stimulus')), ...
-                       'stimulEnd', find((stateEnd == 1) & (dataTable.CurrentEvent == 'Top event>Stimulus')), ...
-                       'trialCaption', []); %this is necessary to get a single strucute instead of array                        
-  trialStruct.trialCaption = dataTable.UserField(trialStruct.fix1Start);
-  
-  trial = struct('caption', trialStruct.trialCaption, ...
-                 'fix1Data', [], 'fix2Data', [], 'scrambledData', [], 'stimulusData', [] );
-  nTrial = length(trialStruct.fix1Start);            
-  for iTrial = 1:nTrial             
-    trial(iTrial).fix1Data = createTrialField(dataTable, ...
-                                trialStruct.fix1Start(iTrial):trialStruct.fix1End(iTrial));                        
-    trial(iTrial).fix2Data = createTrialField(dataTable, ...
-                                trialStruct.fix2Start(iTrial):trialStruct.fix2End(iTrial));
-    trial(iTrial).scrambledData = createTrialField(dataTable, ...
-                                trialStruct.scrambledStart(iTrial):trialStruct.scrambledEnd(iTrial));
-    trial(iTrial).stimulusData = createTrialField(dataTable, ...
-                                trialStruct.stimulStart(iTrial):trialStruct.stimulEnd(iTrial));                              
-  end                
+% if possible correct time stamps and apply the best registration matrix
+if ~isempty(regexpi(filename, 'eyelink'))
+	[tmp_path, tmp_name, tmp_ext] = fileparts(filename);
+	[~, version_string] = fnParseEventIDETrackerLog_v01(filename, ';', [], []);	
+	% load if exists, else parse in (costly)
+	if exist(fullfile(tmp_path, [tmp_name, version_string, '.mat']), 'file')
+		disp(['Loading existing gaze mat-file: ', fullfile(tmp_path, [tmp_name, version_string, '.mat'])]);
+		load(fullfile(tmp_path, [tmp_name, version_string, '.mat']))
+	else
+		data_struct = fnParseEventIDETrackerLog_v01(filename, ';', [], []);
+	end
+	
+	if isfield(data_struct.cn, 'Tracker_corrected_EventIDE_TimeStamp')
+		disp(['Using corrected eventIDE time stamps (based on the tracker''s clock)']);
+		dataTable.origEventIDETimeStamp = dataTable.EventIDETimeStamp;
+		dataTable.Tracker_corrected_EventIDE_TimeStamp = data_struct.data(:, data_struct.cn.Tracker_corrected_EventIDE_TimeStamp);
+		dataTable.EventIDETimeStamp = dataTable.Tracker_corrected_EventIDE_TimeStamp;
+		
+		%find a potential registration file to re-register the raw tracker
+		%traces into eventIDE screen pixel space
+		tform_reg_file_dir_struct = dir(fullfile(tmp_path, ['GAZEREG.*.mat']));	
+		tform_reg_file_FQN = fullfile(tmp_path, tform_reg_file_dir_struct.name);
+		if~isempty(tform_reg_file_dir_struct)
+			% load the registration_struct
+			load(tform_reg_file_FQN);
+			% use the selected tform to convert the raw tracker x and y
+			% values into eventIDE screen pixel space 			
+% 			% apply the registration to the whole x y data series
+
+			RightEyeGazeXY = transformPointsInverse(registration_struct.polynomial.Right_Eye_Raw.tform, [dataTable.RightEyeRawX, dataTable.RightEyeRawY]);
+ 			LeftEyeGazeXY = transformPointsInverse(registration_struct.polynomial.Left_Eye_Raw.tform, [dataTable.LeftEyeRawX, dataTable.LeftEyeRawY]);
+
+			dataTable.origGazeX = dataTable.GazeX;
+			dataTable.origGazeY = dataTable.GazeY;
+
+			dataTable.RightEyeGazeX = RightEyeGazeXY(:, 1);
+			dataTable.RightEyeGazeY = RightEyeGazeXY(:, 2);
+			dataTable.LeftEyeGazeX = LeftEyeGazeXY(:, 1);
+			dataTable.LeftEyeGazeY = LeftEyeGazeXY(:, 2);
+			
+			dataTable.GazeX = dataTable.RightEyeGazeX;
+			dataTable.GazeY = dataTable.RightEyeGazeY;
+			
+		end
+	end
+end
+
+
+
+dataTable.CurrentEvent = categorical(dataTable.CurrentEvent);
+
+[~, ~, stateIndex]  = unique(dataTable.CurrentEvent);
+%[allStates, ~, stateIndex]  = unique(dataTable.CurrentEvent);
+%[allStimuli, ~, stimuliIndices] = unique(dataTable.UserField);
+
+%compute gaze speed
+dt = diff(dataTable.EventIDETimeStamp);
+
+if (needCorrectTimeStamps)
+	nTimestamps = length(dt);
+	lastCorrect = 0;
+	for i = 1:nTimestamps - 1
+		if ((dt(i) > 0) && (dt(i+1) == 0))
+			lastCorrect = i;
+		elseif (((dt(i) == 0) && (dt(i+1) > 0)) && (lastCorrect > 0))
+			meanDT = (dataTable.EventIDETimeStamp(i+1) - dataTable.EventIDETimeStamp(lastCorrect))/(i + 1 - lastCorrect);
+			dataTable.EventIDETimeStamp(lastCorrect:i+1) = ...
+				dataTable.EventIDETimeStamp(lastCorrect):meanDT:dataTable.EventIDETimeStamp(i+1);
+			dt(lastCorrect:i) = meanDT;
+		end
+	end
+end
+dt(dt == 0) = 0.001; %replace zero by 1 us to avoid division by zero
+dataTable.GazeTime = ([dt(1); dt] + [dt; dt(end)])/2;
+
+%compute gaze speed in pixels/s
+speed = sqrt(diff(dataTable.GazeX).^2 + diff(dataTable.GazeY).^2)./dt;
+dataTable.GazeSpeed = [speed; 0]; %last value of speed is set to zero
+
+%create trials
+%define borders of the states
+stateChange = stateIndex(2:end) - stateIndex(1:end-1);
+stateChange(stateChange ~= 0) = 1;
+stateStart = [0; stateChange];
+stateEnd = [stateChange; 0];
+
+fixationStart = find((stateStart == 1) & ((dataTable.CurrentEvent == 'Top event>Fix 1') | (dataTable.CurrentEvent == 'Top event>Fix 2')));
+fixationEnd = find((stateEnd == 1) & ((dataTable.CurrentEvent == 'Top event>Fix 1') | (dataTable.CurrentEvent == 'Top event>Fix 2')));
+
+trialStruct = struct('fix1Start', fixationStart(1:2:end), ...  % uneven fixations indicate trial start
+	'fix1End', fixationEnd(1:2:end), ...
+	'fix2Start', fixationStart(2:2:end), ...  % even fixations are before stimulus presentations
+	'fix2End', fixationEnd(2:2:end), ...
+	'scrambledStart', find((stateStart == 1) & (dataTable.CurrentEvent == 'Top event>Scrambled Face')), ...
+	'scrambledEnd', find((stateEnd == 1) & (dataTable.CurrentEvent == 'Top event>Scrambled Face')), ...
+	'stimulStart', find((stateStart == 1) & (dataTable.CurrentEvent == 'Top event>Stimulus')), ...
+	'stimulEnd', find((stateEnd == 1) & (dataTable.CurrentEvent == 'Top event>Stimulus')), ...
+	'trialCaption', []); %this is necessary to get a single strucute instead of array
+trialStruct.trialCaption = dataTable.UserField(trialStruct.fix1Start);
+
+trial = struct('caption', trialStruct.trialCaption, ...
+	'fix1Data', [], 'fix2Data', [], 'scrambledData', [], 'stimulusData', [] );
+nTrial = length(trialStruct.fix1Start);
+for iTrial = 1:nTrial
+	trial(iTrial).fix1Data = createTrialField(dataTable, ...
+		trialStruct.fix1Start(iTrial):trialStruct.fix1End(iTrial));
+	trial(iTrial).fix2Data = createTrialField(dataTable, ...
+		trialStruct.fix2Start(iTrial):trialStruct.fix2End(iTrial));
+	trial(iTrial).scrambledData = createTrialField(dataTable, ...
+		trialStruct.scrambledStart(iTrial):trialStruct.scrambledEnd(iTrial));
+	trial(iTrial).stimulusData = createTrialField(dataTable, ...
+		trialStruct.stimulStart(iTrial):trialStruct.stimulEnd(iTrial));
+end
 end
 
 function gazeData = createTrialField(dataTable, indices)
-  gazeData = struct('GazeX', dataTable.GazeX(indices), ...
-                    'GazeY', dataTable.GazeY(indices), ...
-                    'GazeSpeed', dataTable.GazeSpeed(indices), ...
-                    'GazeTime', dataTable.GazeTime(indices), ...
-                    'TimeStamp', dataTable.EventIDETimeStamp(indices)); 
+gazeData = struct('GazeX', dataTable.GazeX(indices), ...
+	'GazeY', dataTable.GazeY(indices), ...
+	'GazeSpeed', dataTable.GazeSpeed(indices), ...
+	'GazeTime', dataTable.GazeTime(indices), ...
+	'TimeStamp', dataTable.EventIDETimeStamp(indices));
 end
 
 

@@ -157,6 +157,9 @@ function plotObfuscationStatitistic(totalObfusc, sessionName, obfuscLevelName, f
     nRegion = length(regionName);
 
     figure('Name', 'Total shares of fixations (per obfucation level)');
+	[output_rect] = fnFormatPaperSize('Plos_half_page', gcf, 1/2.54);
+	set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
+	
     set( axes,'fontsize', fontSize, 'FontName', fontName);
     for iPlot = 1:2
         subplot(2, 1, iPlot);
@@ -178,10 +181,12 @@ function plotObfuscationStatitistic(totalObfusc, sessionName, obfuscLevelName, f
         title(plotTitle(iPlot), 'fontSize', fontSize, 'FontName',fontName);
     end
 
-    set( gcf, 'PaperUnits','centimeters' );
-    xSize = 28; ySize = 28;
-    xLeft = 0; yTop = 0;
-    set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
-    print ( '-depsc', '-r300', fullfile(sessionName, 'obfuscationEffect.eps'));
+%     set( gcf, 'PaperUnits','centimeters' );
+%     xSize = 28; ySize = 28;
+%     xLeft = 0; yTop = 0;
+%     set( gcf,'PaperPosition', [ xLeft yTop xSize ySize ] );
+    %print( '-depsc', '-r300', fullfile(sessionName, 'obfuscationEffect.eps'));
+	write_out_figure(gcf(), fullfile(sessionName, 'obfuscationEffect.pdf'));
+	
 end
  
