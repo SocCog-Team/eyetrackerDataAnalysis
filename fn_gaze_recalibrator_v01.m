@@ -13,7 +13,13 @@ function [ registration_struct ] = fn_gaze_recalibrator_v01(gaze_tracker_logfile
 %	save tform matrices. reg.affine.eyelink.Right_Eye_Raw.tform ...
 %		as sessinID.subject.gaze_registration.mat in the days directory, so
 %		../../
-% allow unsupervised run, if mouse point mat file already exists
+%	allow unsupervised run, if mouse point mat file already exists
+%	use set(gca(), 'YDir', 'reversed') instead of the manual conversion
+%	between eventIDE and matlab coordinates (also look at the getpoints()
+%	call.
+%	Deal with pupillabs calibration data files
+%
+
 
 
 tictoc_timestamp_list.(mfilename).start = tic;
@@ -270,6 +276,14 @@ fixation_target.by_sample.table(:, FTBS_cn.timestamp) = timestamp_list;
 % now find the unique displayed fixation target positions
 existing_fixation_target_x_y_coordinate_list = unique(fixation_target.by_sample.table(:, 1:2), 'rows');
 
+% % find and exclude NaNs (these should not exist here, but if they do treat them properly)
+% nan_2d_idx = isnan(existing_fixation_target_x_y_coordinate_list);
+% nan_row_idx = find(sum(nan_2d_idx, 2));
+% if ~isempty(nan_row_idx)
+% 	existing_fixation_target_x_y_coordinate_list(nan_row_idx, :) = [];
+% end
+
+
 zero_offset = 0;	% handle absence of the no fixation targt displayed condition gracefully
 for i_fixation_target_x_y_coordinate = 1 : length(existing_fixation_target_x_y_coordinate_list)
 	current_target_ID = i_fixation_target_x_y_coordinate - zero_offset;
@@ -281,6 +295,12 @@ for i_fixation_target_x_y_coordinate = 1 : length(existing_fixation_target_x_y_c
 		& fixation_target.by_sample.table(:, FTBS_cn.FixationPointY) == existing_fixation_target_x_y_coordinate_list(i_fixation_target_x_y_coordinate, 2);
 	fixation_target.by_sample.table(current_target_ID_lidx, FTBS_cn.FixationPointID) = current_target_ID;
 end
+
+% clean up un assigned points, assume zero
+unassigned_samples_idx = find(fixation_target.by_sample.table(:, FTBS_cn.FixationPointID) == -1);
+if ~isempty(unassigned_samples_idx)
+	fixation_target.by_sample.table(unassigned_samples_idx, FTBS_cn.FixationPointID) = 0;
+end	
 
 % now find the transitions between fixation target position (also on/off transitions)
 switch_list = diff(fixation_target.by_sample.table(:, FTBS_cn.FixationPointID)); % a switch results in a change of the FixationPointID
@@ -318,7 +338,7 @@ for i_switch = 1 : length(targetstart_ts_idx)
 		good_target_sample_points_lidx(offset_start_idx: current_end_idx) = 1;
 	end
 	% store the coordinates in the reduced table
-	if current_target_ID ~= 0
+	if current_target_ID > 0
 		fixation_target_position_table(current_target_ID, :) = [current_target_x, current_target_y];
 	end
 	
@@ -679,7 +699,7 @@ for i_transformationType = 1 : length(transformationType_list)
 end
 
 % construct the output name
-output_mat_filename = ['GAZEREG.SID_', sessionID, '.SIDE_', side, '.SUBJECT', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
+output_mat_filename = ['GAZEREG.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
 % save to the current directory
 save(fullfile(gaze_tracker_logfile_path, output_mat_filename), 'registration_struct');
 % save to the day's directory.
