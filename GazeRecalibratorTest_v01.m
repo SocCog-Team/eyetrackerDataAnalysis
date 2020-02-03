@@ -8,7 +8,7 @@ data_root_str = '/';
 % network!
 data_base_dir = fullfile(data_root_str, 'Volumes', 'social_neuroscience_data');
 % local
-%data_base_dir = fullfile('~', 'DPZ');
+data_base_dir = fullfile('~', 'DPZ');
 
 data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190729', '20190729T154225.A_Elmo.B_None.SCP_01.sessiondir');
 
@@ -75,10 +75,20 @@ end
 
 
 
-%% PRIMATAR
-%EyeLink HV9 eyelink calibration/validation with 41 target positions
-data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190222', '20190222T125802.A_Elmo.B_None.SCP_01.sessiondir');
-gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190222T125802.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
+% %% PRIMATAR
+% %EyeLink HV9 eyelink calibration/validation with 41 target positions
+% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190222', '20190222T125802.A_Elmo.B_None.SCP_01.sessiondir');
+% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190222T125802.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
+% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+
+% % %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
+% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200107', '20200107T134055.A_Elmo.B_None.SCP_01.sessiondir');
+% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200107T134055.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
+% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+
+% %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
+data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200109', '20200109T131751.A_Elmo.B_None.SCP_01.sessiondir');
+gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200109T131751.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
 reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 
 
