@@ -51,7 +51,7 @@ end
 % data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190320', '20190320T092435.A_Elmo.B_None.SCP_01.sessiondir');
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190320T092435.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-% 
+
 
 
 
@@ -86,13 +86,13 @@ end
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200107T134055.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 
-% %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
-data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200109', '20200109T131751.A_Elmo.B_None.SCP_01.sessiondir');
-gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200109T131751.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+% % %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
+% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200109', '20200109T131751.A_Elmo.B_None.SCP_01.sessiondir');
+% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200109T131751.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
+% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 
 
-
+%return
 
 
 % %%Pupillabs test
@@ -101,5 +101,16 @@ reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, ve
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190419T161006.A_190419ID111S1.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 
+
+
+
+%%Pupillabs test
+tracker_type = 'pupillabs';
+data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200522', '20200522T154315.A_20200522ID006S1.B_None.SCP_01.sessiondir');
+gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200522T154315.A_20200522ID006S1.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
+reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+
+
+%/Users/smoeller/DPZ/taskcontroller/SCP_DATA/SCP-CTRL-01/SESSIONLOGS/2020/200522/20200522T154606.A_20200522ID006S1.B_None.SCP_01.sessiondir/trackerlogfiles
 end
 
