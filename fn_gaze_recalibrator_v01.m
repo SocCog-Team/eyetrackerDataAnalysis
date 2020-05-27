@@ -153,7 +153,29 @@ switch(tracker_type)
 		gaze_col_name_list.Y = {'Right_Eye_Raw_Y', 'Left_Eye_Raw_Y'};
 		% if single columns contain multiple data types (like for pupillabs data)
 		gaze_col_name_list.gaze_typeID_col_name = '';
+		gaze_col_name_list.valied_gaze_typeID_values = [];
 		out_of_bounds_marker_value = -32768;
+		confidence_col_name = [];	% set the column index for a column containing cofidence data for the gaze tracker
+		min_confidence = 0;		% only include sample with confidence >= min_confidence
+	case 'pupillabs'
+		% here we have different data row types, 
+		% Sample_Type_idx: Pupil, World Gaze, Fiducial Gaze
+		% Fiducial_Surface_idx: the name of a surface (string)
+		% Source_ID_idx: 0, pupil0, 1: pupil1, 2: World Gaze, 3: Surface(N?)
+		
+		% two eye cameras, world
+		% collect the names of data columns containing registerable data
+		% get these as pairs of aligned X and Y
+		gaze_col_name_list.stem = {'Raw'};
+		gaze_col_name_list.X = {'Raw_X'};
+		gaze_col_name_list.Y = {'Raw_Y'};
+		% if single columns contain multiple data types (like for pupillabs data)
+		gaze_col_name_list.gaze_typeID_col_name = 'Source_ID';
+		gaze_col_name_list.valied_gaze_typeID_values = [3];
+		out_of_bounds_marker_value = -32768;
+		confidence_col_name = 'Confidence';	% set the column index for a column containing cofidence data for the gaze tracker
+		min_confidence = 0.8;		% only include sample with confidence >= min_confidence
+		
 	otherwise
 		error(['tracker_type: ', tracker_type, ' not yet supported.']);
 end
@@ -179,6 +201,24 @@ registration_struct.info.polynomial_degree = polynomial_degree;
 data_struct = fnParseEventIDETrackerLog_v01(gaze_tracker_logfile_FQN, ';', [], []);
 ds_colnames = data_struct.cn;
 
+switch(tracker_type)
+	case 'eyelink'
+	case 'pupillabs'
+		gaze_col_name_list.gaze_typeID_col_name = 'Source_ID';
+		gaze_col_name_list.valied_gaze_typeID_values = [3];
+		out_of_bounds_marker_value = -32768;
+		data_struct.data_orig = data_struct.data;
+		valid_gaze_typeID_row_idx = find(data_struct.data(:, data_struct.cn.(gaze_col_name_list.gaze_typeID_col_name)) == gaze_col_name_list.valied_gaze_typeID_values);
+		data_struct.data = data_struct.data(valid_gaze_typeID_row_idx, :);
+		
+	otherwise
+		error(['tracker_type: ', tracker_type, ' not yet supported.']);
+end
+
+
+
+
+
 % take the best available time stamps from the tracker file
 if isfield(ds_colnames, 'Tracker_corrected_EventIDE_TimeStamp')
 	timestamp_list = data_struct.data(:, ds_colnames.Tracker_corrected_EventIDE_TimeStamp);
@@ -191,6 +231,7 @@ if ~isequal(sorted_timestamp_list, timestamp_list);
 	data_struct.data = data_struct.data(timestamp_sort_idx, :);
 	timestamp_list = sorted_timestamp_list;
 end
+
 
 
 
@@ -267,7 +308,7 @@ fixation_target.by_sample.header = {'FixationPointX', 'FixationPointY', 'Fixatio
 fixation_target.by_sample.cn = local_get_column_name_indices(fixation_target.by_sample.header);
 FTBS_cn = fixation_target.by_sample.cn;
 
-fixation_target.by_sample.table = zeros([size(data_struct.data, 1), 3]);
+fixation_target.by_sample.table = zeros([size(data_struct.data, 1), 4]);
 fixation_target.by_sample.table(:, 1:2) = [data_struct.data(:, ds_colnames.FixationPointX),(data_struct.data(:, ds_colnames.FixationPointY))];
 fixation_target.by_sample.table(:, FTBS_cn.FixationPointID) = -1; % faster than NaN ad also not a valid index
 fixation_target.by_sample.table(:, FTBS_cn.timestamp) = timestamp_list;
@@ -284,7 +325,7 @@ existing_fixation_target_x_y_coordinate_list = unique(fixation_target.by_sample.
 % end
 
 
-zero_offset = 0;	% handle absence of the no fixation targt displayed condition gracefully
+zero_offset = 0;	% handle absence of the no fixation target displayed condition gracefully
 for i_fixation_target_x_y_coordinate = 1 : length(existing_fixation_target_x_y_coordinate_list)
 	current_target_ID = i_fixation_target_x_y_coordinate - zero_offset;
 	if existing_fixation_target_x_y_coordinate_list(i_fixation_target_x_y_coordinate, :) == [0, 0]
@@ -347,6 +388,13 @@ end
 good_target_sample_points_idx = find(good_target_sample_points_lidx);
 bad_target_sample_points_idx = find(good_target_sample_points_lidx == 0);
 
+% especially the pupil labs tracker estimates its own confidence, so use
+% this.
+if isfield(data_struct.cn, confidence_col_name)
+	good_confidence_sample_points_idx = find(data_struct.data(:, data_struct.cn.(confidence_col_name)) >= min_confidence);
+	good_target_sample_points_idx = intersect(good_target_sample_points_idx, good_confidence_sample_points_idx);
+end
+
 
 % plot the different sample classes in different colors
 target_and_cluster_postions_fh = figure('Name', ['Roberta''s gaze visualizer: ', gaze_tracker_logfile_name, gaze_tracker_logfile_ext]);
@@ -384,7 +432,7 @@ end
 for i_fix_target = 1 : length(find(unique_fixation_targets))
 	unique_fixation_target_id = unique_fixation_targets(nonzero_unique_fixation_target_idx(i_fix_target));
 	
-	title(['Select the center of the gaze sample cloud belonging to fixzation target ', num2str(unique_fixation_target_id), ', press enter after selection. (use delete to erase)']);
+	title(['Select the center of the gaze sample cloud belonging to fixzation target ', num2str(unique_fixation_target_id), ', press enter after selection. (use delete to erase)'], 'FontSize', 14);
 	plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', 'r', 'Marker', '+', 'Markersize', 10);
 	
 	% if there is a stored cluster center for this fixation target, display
