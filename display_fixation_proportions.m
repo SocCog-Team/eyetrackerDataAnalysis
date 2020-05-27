@@ -76,11 +76,11 @@ for iRegion = 1:nRegion
 end
 
 % draw bar graphs of fixation proportions
-plotTitle = {'proportions of fixation durations (stimuli)', ...
-             'proportions of fixations (stimuli)', ...
+plotTitle = {'proportions of fixations (stimuli)', ...
+             'proportions of fixation duration (stimuli)', ...
              'rate of first fixations (stimuli)', ...
-             'proportions of fixation duration (scrambled)', ...
              'proportions of fixations (scrambled)', ...
+             'proportions of fixation duration (scrambled)', ...
              'first fixation rate (scrambled)'};
              
 figure('Name', 'Fixation proportions');
@@ -88,6 +88,7 @@ figure('Name', 'Fixation proportions');
 set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', output_rect);
 
 set( axes,'fontSize', fontSize, 'FontName',fontName);
+maxValue = 1.29;       
 maxValue = 1.0;       
 for iPlot = 1:6   
     % prepare data for the plot
@@ -121,8 +122,8 @@ for iPlot = 1:6
 %     set(legend_handleMain, 'Position', [pos(1) + 0.1, pos(2) + 0.07, pos(3:4)]);
 %     legend boxoff 
     axis([0.5, nRegion + 0.5, 0, maxValue + 0.1]);
-    set( gca, 'XTick', 1:nRegion, 'XTickLabel', regionName, 'YTick', 0:0.2:1, 'fontsize', fontSize, 'FontName',fontName);  
-    title(plotTitle(iPlot), 'fontSize', fontSize, 'FontName',fontName);
+    set( gca, 'XTick', 1:nRegion, 'XTickLabel', regionName, 'YTick', 0:0.2:1, 'fontsize', fontSize-4, 'FontName',fontName);  
+    title(plotTitle(iPlot), 'fontSize', fontSize-4, 'FontName',fontName, 'FontWeight', 'bold');
 end   
 
 

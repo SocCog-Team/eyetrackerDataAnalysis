@@ -1,4 +1,4 @@
-function gaussian_attention_map(x, y, sigma, varargin)
+function [ axes_handle ] = gaussian_attention_map(x, y, sigma, varargin)
 % gaussian_attention_map draws fixation areas as 2D Gaussian distributions 
 % around central point. If background image is provided, attention map is overlayed with it.
 %
@@ -99,8 +99,10 @@ function gaussian_attention_map(x, y, sigma, varargin)
   
   %create transparencyMap from fixationMap
   maxTransperentValue = 2/3;
-  transparencyMap = maxTransperentValue*fixationMap;
-  transparencyMap(fixationMap > 1) = maxTransperentValue;
+  maxTransperentValue = 0.6;
+  minTransperentValueOffset = 0.2;
+  transparencyMap = (maxTransperentValue*fixationMap) + minTransperentValueOffset;
+  transparencyMap(fixationMap > 1) = maxTransperentValue + minTransperentValueOffset;
 
   % create fixationMap image from mapImage
   fixationMap(fixationMap > 2) = 2; 
@@ -129,5 +131,7 @@ function gaussian_attention_map(x, y, sigma, varargin)
   else
     imshow(fixationImage, refFinalImage);
   end  
+  
+  axes_handle = gca();
 end
 

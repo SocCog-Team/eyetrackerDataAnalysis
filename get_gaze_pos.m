@@ -141,6 +141,8 @@ end
 
 
 function fixation = getFixDispersionBased(rawPos, dispThreshold, fixationDurationThreshold, isDraw)
+% see Salvucci D, Goldberg J (2000) Identifying fixations and saccades in eye-tracking protocols. In, pp 71?78.
+
   nTrial = length(rawPos);
   fixation = repmat(struct('x', [], 'y', [], 't', []), 1, nTrial);
   if (isDraw)                                           

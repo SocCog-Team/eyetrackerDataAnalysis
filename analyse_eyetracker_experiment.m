@@ -1,13 +1,18 @@
 function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment(filename, ...
     sessionName, dyadicPlatformImageTransform, nObfuscationLevelToConsider, ...
-    stimulImage, eyesImageRect, mouthImageRect, plotSetting)         
+    stimulImage, scramImage, eyesImageRect, mouthImageRect, plotSetting)         
 
     mkdir(sessionName);
     %-------------- set experiment parameters --------------
-    screenWidth = 1280;
-    screenHeight = 1024;
-    screenRect = [0, 0, screenWidth, screenHeight];          
-           
+    screenWidth = 1920;
+    screenHeight = 1080;
+    %screenRect = [0, 0, screenWidth, screenHeight];          
+  
+	if ~isempty(regexp(sessionName, '^Cornelius'))
+	    screenWidth = 1280;
+		screenHeight = 1024;
+	end
+	
     if dyadicPlatformImageTransform
         fixPointX = 960; %fixation point coord
         fixPointY = 450;
@@ -22,7 +27,10 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
         scalingCoeff = 400/383;
         imageWidth = 400;
         imageHeight = 400;
-    end
+	end
+	
+	screenRect = [0, 0, screenWidth, screenHeight];          
+
     fixPointSize = 204;
     fixPointRect = [fixPointX - fixPointSize/2, fixPointY - fixPointSize/2, fixPointSize, fixPointSize];
 
@@ -46,6 +54,13 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
                               'dispersionThreshold', 30, ...
                               'durationThreshold', 100); %120
 
+	if ~isempty(regexp(sessionName, '^Cornelius'))
+	    fixationDetector.dispersionThreshold = 30;
+	else
+		fixationDetector.dispersionThreshold = 10;
+	end
+					  
+						  
 
                      
     % read data from eyetracker log file                      
@@ -68,6 +83,7 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
     if (nObfuscationLevelToConsider == 1) || (nObfuscationLevelToConsider == 2)  || (nObfuscationLevelToConsider == 3)
        stimulName = {'Real face 1', 'Real face 2', 'Real face 3', 'Realistic avatar', 'Unrealistic avatar'};          
        stimulImageForAnalysis = stimulImage;
+	   scramImageForAnalysis = scramImage;
     else % ignore stimuli and compare obfuscation levels only
         % analyse trials grouped by presented image (taking obfuscatio into account)       
         stimulName = {'Real face 1 - Normal', 'Real face 2 - Normal', 'Real face 3 - Normal', ... 
@@ -75,14 +91,22 @@ function [stimulStat, scrambledStat, stimulName] = analyse_eyetracker_experiment
                       'Real face 1 - Moderate obfuscation', 'Real face 2 - Moderate obfuscation', 'Real face 3 - Moderate obfuscation', ... 
                       'Realistic avatar - Moderate obfuscation', 'Unrealistic avatar  - Moderate obfuscation', ...
                       'Real face 1 - Strong obfuscation', 'Real face 2 - Strong obfuscation',  'Real face 3 - Strong obfuscation', ...
-                      'Realistic avatar  - Strong obfuscation', 'Unrealistic avatar  - Strong obfuscation'};          
-        stimulImageForAnalysis = [stimulImage, stimulImage, stimulImage];
+                      'Realistic avatar  - Strong obfuscation', 'Unrealistic avatar  - Strong obfuscation'};
+				  
+		%n_stimulNames = length(stimulName);
+		if length(stimulImage) == length(stimulName)
+			stimulImageForAnalysis = stimulImage;
+		else		  
+			stimulImageForAnalysis = [stimulImage, stimulImage, stimulImage];
+		end
+		scramImageForAnalysis = [scramImage, scramImage, scramImage];
+
         eyesRect = [eyesRect; eyesRect; eyesRect];
         mouthRect = [mouthRect; mouthRect; mouthRect];
     end   
     pValue = 0.05;
     [stimulStat, scrambledStat] = analyse_stimul_fixation(trial, stimulName, ...
-        pValue, stimulImageForAnalysis, fixationDetector, screenRect, imageRect, eyesRect, mouthRect, plotSetting, sessionName);
+        pValue, stimulImageForAnalysis, scramImageForAnalysis, fixationDetector, screenRect, imageRect, eyesRect, mouthRect, plotSetting, sessionName);
 
     
     % -------------- plot final statistics --------------
