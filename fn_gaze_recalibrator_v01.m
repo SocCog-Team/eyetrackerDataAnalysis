@@ -153,7 +153,7 @@ switch(tracker_type)
 		gaze_col_name_list.Y = {'Right_Eye_Raw_Y', 'Left_Eye_Raw_Y'};
 		% if single columns contain multiple data types (like for pupillabs data)
 		gaze_col_name_list.gaze_typeID_col_name = '';
-		gaze_col_name_list.valied_gaze_typeID_values = [];
+		gaze_col_name_list.valid_gaze_typeID_values = [];
 		out_of_bounds_marker_value = -32768;
 		confidence_col_name = [];	% set the column index for a column containing cofidence data for the gaze tracker
 		min_confidence = 0;		% only include sample with confidence >= min_confidence
@@ -169,12 +169,25 @@ switch(tracker_type)
 		gaze_col_name_list.stem = {'Raw'};
 		gaze_col_name_list.X = {'Raw_X'};
 		gaze_col_name_list.Y = {'Raw_Y'};
+		% these next will fill in the former
+		gaze_col_name_list.stem_list = {'Pupil0_2d', 'Pupil0_pye3d', 'Pupil1_2d', 'Pupil1_pye3d', 'WorldGaze2', 'FiducialGaze3'};
+		gaze_col_name_list.X_list = {'Raw_X', 'Raw_X', 'Raw_X', 'Raw_X', 'Raw_X', 'Raw_X'};
+		gaze_col_name_list.Y_list = {'Raw_Y', 'Raw_Y', 'Raw_Y', 'Raw_Y', 'Raw_Y', 'Raw_Y'};
+		
 		% if single columns contain multiple data types (like for pupillabs data)
-		gaze_col_name_list.gaze_typeID_col_name = 'Source_ID';
-		gaze_col_name_list.valied_gaze_typeID_values = [3];
+		gaze_col_name_list.gaze_typeID_col_name = 'Source_ID';	% note this will fail for multiple surfcaes/fiducial gaze sets in one file
+		% attention needs as much fields as stem_list
+		gaze_col_name_list.valid_gaze_typeID_values = [0, 0, 1, 1, 2, 3];	% 0, 1 -> Pupil, 2 World Gaze; 3 Fiducial Gaze
 		out_of_bounds_marker_value = -32768;
 		confidence_col_name = 'Confidence';	% set the column index for a column containing cofidence data for the gaze tracker
-		min_confidence = 0.8;		% only include sample with confidence >= min_confidence
+		min_confidence = 0.05;		% only include sample with confidence >= min_confidence
+		
+		% NOTE Pupil data also comes in two rows for 2 different Detection
+		% methods with identical tracker time stamp: 
+		% "2d c++" and "pye3d 0.1.1 real-time" so we probably need to split
+		% by this as well...
+		
+		
 		
 	otherwise
 		error(['tracker_type: ', tracker_type, ' not yet supported.']);
@@ -201,21 +214,46 @@ registration_struct.info.polynomial_degree = polynomial_degree;
 data_struct = fnParseEventIDETrackerLog_v01(gaze_tracker_logfile_FQN, ';', [], []);
 ds_colnames = data_struct.cn;
 
+
 switch(tracker_type)
 	case 'eyelink'
 	case 'pupillabs'
-		gaze_col_name_list.gaze_typeID_col_name = 'Source_ID';
-		gaze_col_name_list.valied_gaze_typeID_values = [3];
-		out_of_bounds_marker_value = -32768;
-		data_struct.data_orig = data_struct.data;
-		valid_gaze_typeID_row_idx = find(data_struct.data(:, data_struct.cn.(gaze_col_name_list.gaze_typeID_col_name)) == gaze_col_name_list.valied_gaze_typeID_values);
-		data_struct.data = data_struct.data(valid_gaze_typeID_row_idx, :);
-		
+		% we need a copy of this... so we can extract the relevant rows for
+		% the different row types...
+		data_struct.data_orig = data_struct.data;		
 	otherwise
 		error(['tracker_type: ', tracker_type, ' not yet supported.']);
 end
 
+for i_data_row_types = 1 : max(1, length(gaze_col_name_list.valid_gaze_typeID_values))
 
+switch(tracker_type)
+	case 'eyelink'
+	case 'pupillabs'
+		% get the proper name in place
+		gaze_col_name_list.stem = gaze_col_name_list.stem_list(i_data_row_types);
+		gaze_col_name_list.X = gaze_col_name_list.X_list(i_data_row_types);
+		gaze_col_name_list.Y = gaze_col_name_list.Y_list(i_data_row_types);	
+
+		%data_struct.data_orig = data_struct.data;
+		valid_gaze_typeID_row_idx = find(data_struct.data_orig(:, data_struct.cn.(gaze_col_name_list.gaze_typeID_col_name)) == gaze_col_name_list.valid_gaze_typeID_values(i_data_row_types));
+
+		if strcmp('Pupil', gaze_col_name_list.stem{1}(1:5))
+			switch gaze_col_name_list.stem{1}(7:end)
+				case '_2d'
+					cur_detection_method_unique_list_idx = find(ismember(data_struct.unique_lists.Detection_Method, {'2d c++'}));
+				case '_pye3d'
+					cur_detection_method_unique_list_idx = find(ismember(data_struct.unique_lists.Detection_Method, {'pye3d 0.1.1 real-time'}));
+			end
+			current_detection_method_rows_idx = find(data_struct.data_orig(:, data_struct.cn.Detection_Method_idx) == cur_detection_method_unique_list_idx);
+			valid_gaze_typeID_row_idx = intersect(valid_gaze_typeID_row_idx, current_detection_method_rows_idx);
+		end
+		data_struct.data = data_struct.data_orig(valid_gaze_typeID_row_idx, :);
+	otherwise
+		error(['tracker_type: ', tracker_type, ' not yet supported.']);
+end
+
+disp(['Processing: ', gaze_col_name_list.stem{1}]);
 
 
 
@@ -227,7 +265,7 @@ else
 end
 % resort by timestamp
 [sorted_timestamp_list, timestamp_sort_idx] = sort(timestamp_list);
-if ~isequal(sorted_timestamp_list, timestamp_list);
+if ~isequal(sorted_timestamp_list, timestamp_list)
 	data_struct.data = data_struct.data(timestamp_sort_idx, :);
 	timestamp_list = sorted_timestamp_list;
 end
@@ -239,41 +277,138 @@ end
 fix_target_x_list = (data_struct.data(:, ds_colnames.FixationPointX));
 fix_target_y_list = (data_struct.data(:, ds_colnames.FixationPointY));
 
-% extract the columns with the eventIDE coordinates for the gaze data
-% these are not guaranteed to employ the final/best eventIDE linear
-% registration "matrix" yet.
-eventide_gaze_x_list = data_struct.data(:, ds_colnames.Gaze_X);
-eventide_gaze_y_list = data_struct.data(:, ds_colnames.Gaze_Y);
 
-% extract the final calibration values
-calibration.gain_x = data_struct.data(end, ds_colnames.GLM_Coefficients_GainX);
-calibration.gain_y = data_struct.data(end, ds_colnames.GLM_Coefficients_GainY);
-calibration.offset_x = data_struct.data(end, ds_colnames.GLM_Coefficients_OffsetX);
-calibration.offset_y = data_struct.data(end, ds_colnames.GLM_Coefficients_OffsetY);
+% This only works if the eventIDE calbibration is for the same space
+% for eyelink, both eyes come from the same camera and hence will work 
+% reasonably well with the same eventIDE offset and gain, good enough to
+% allow to see the actual data points, but for Pupil labs that only works
+% for the row_type/Sample Type/SourceID that was used for the calibration
+% as all SourceID "live" in different spaces... so we need a general
+% alignment before we collect the points
 
-% extract the GLM data for all samples
-calibration_gain_x_list = data_struct.data(:, ds_colnames.GLM_Coefficients_GainX);
-calibration_gain_y_list = data_struct.data(:, ds_colnames.GLM_Coefficients_GainY);
-calibration_offset_x_list = data_struct.data(:, ds_colnames.GLM_Coefficients_OffsetX);
-calibration_offset_y_list = data_struct.data(:, ds_colnames.GLM_Coefficients_OffsetY);
-% undo all variable calibration to get back to something resembling the
-% tracker's raw gaze values
-raw_eventide_gaze_x_list = (eventide_gaze_x_list ./ calibration_gain_x_list) - calibration_offset_x_list;
-raw_eventide_gaze_y_list = (eventide_gaze_y_list ./ calibration_gain_y_list) - calibration_offset_y_list;
-% apply the final eventIDE GLM calibration matrix to all samples, as that
-% should be at least acceptable. Note, we only do this so loading and
-% displaying gaze and target data in the same plot looks reasonable and
-% that we can approximate the instantaneous velocity.
-cal_eventide_gaze_x_list = (raw_eventide_gaze_x_list + calibration.offset_x) .* calibration.gain_x;
-cal_eventide_gaze_y_list = (raw_eventide_gaze_y_list + calibration.offset_y) .* calibration.gain_y;
+switch(tracker_type)
+	case 'eyelink'
+		% extract the columns with the eventIDE coordinates for the gaze data
+		% these are not guaranteed to employ the final/best eventIDE linear
+		% registration "matrix" yet.
+		eventide_gaze_x_list = data_struct.data(:, ds_colnames.Gaze_X);
+		eventide_gaze_y_list = data_struct.data(:, ds_colnames.Gaze_Y);
+		
+		% extract the final calibration values
+		calibration.gain_x = data_struct.data(end, ds_colnames.GLM_Coefficients_GainX);
+		calibration.gain_y = data_struct.data(end, ds_colnames.GLM_Coefficients_GainY);
+		calibration.offset_x = data_struct.data(end, ds_colnames.GLM_Coefficients_OffsetX);
+		calibration.offset_y = data_struct.data(end, ds_colnames.GLM_Coefficients_OffsetY);
+		
+		% extract the GLM data for all samples
+		calibration_gain_x_list = data_struct.data(:, ds_colnames.GLM_Coefficients_GainX);
+		calibration_gain_y_list = data_struct.data(:, ds_colnames.GLM_Coefficients_GainY);
+		calibration_offset_x_list = data_struct.data(:, ds_colnames.GLM_Coefficients_OffsetX);
+		calibration_offset_y_list = data_struct.data(:, ds_colnames.GLM_Coefficients_OffsetY);
+		% undo all variable calibration to get back to something resembling the
+		% tracker's raw gaze values
+		raw_eventide_gaze_x_list = (eventide_gaze_x_list ./ calibration_gain_x_list) - calibration_offset_x_list;
+		raw_eventide_gaze_y_list = (eventide_gaze_y_list ./ calibration_gain_y_list) - calibration_offset_y_list;
+		% apply the final eventIDE GLM calibration matrix to all samples, as that
+		% should be at least acceptable. Note, we only do this so loading and
+		% displaying gaze and target data in the same plot looks reasonable and
+		% that we can approximate the instantaneous velocity.
+		cal_eventide_gaze_x_list = (raw_eventide_gaze_x_list + calibration.offset_x) .* calibration.gain_x;
+		cal_eventide_gaze_y_list = (raw_eventide_gaze_y_list + calibration.offset_y) .* calibration.gain_y;
+	case 'pupillabs'
+		% the calibration trick only works for tthe SourceID that was
+		% actually used and cilibrated by eventIDE, the other IDs are in
+		% quite different spaces, so need to be treated differently
+		% and the logfile does not unambiguosly tell which SourceID was
+		% used anyway, so try to find a generic method to get the scaling
+		% roughly correct...
+		
+		raw_eventide_gaze_x_list = data_struct.data(:, ds_colnames.(gaze_col_name_list.X{1}));
+		raw_eventide_gaze_y_list = data_struct.data(:, ds_colnames.(gaze_col_name_list.Y{1}));
+		
+		% manually select the matching peaks in fix_target_x_list and
+		% raw_eventide_gaze_x_list to get an estimate of gain and offset
+		% adjustments required to align raw_eventide_gaze with eventIDE's
+		% screen pixel space.
+		
+		% raw values of zero or ones are suspicious for the pupil cameras
+		% and the world camera but should be okay for surfaces
+		exclude_samples_idx = [];
+		exclude_samples_idx = union(exclude_samples_idx, find(raw_eventide_gaze_x_list == 0));
+		exclude_samples_idx = union(exclude_samples_idx, find(raw_eventide_gaze_x_list == 1));
+		exclude_samples_idx = union(exclude_samples_idx, find(raw_eventide_gaze_y_list == 0));
+		exclude_samples_idx = union(exclude_samples_idx, find(raw_eventide_gaze_y_list == 1));
+		
+		
+		switch gaze_col_name_list.stem{1}
+			case {'Pupil0_2d', 'Pupil0_pye3d'}
+				mov_space_range_X = [0, 1.0];	% could be [0, 1] but the very edges are dubious 
+				mov_space_range_Y = [0, 1.0];	% could be [0, 1] but the very edges are dubious 
+			case {'Pupil1_2d', 'Pupil1_pye3d'}
+				mov_space_range_X = [0, 1.0];
+				mov_space_range_Y = [0, 1.0];
+			case 'WorldGaze2'
+				mov_space_range_X = [0, 1.0];
+				mov_space_range_Y = [0, 1.0];
+			case 'FiducialGaze3'
+				% this depends on the size of the surface in relaton to the
+				% world gaze, but here just extend oe surface width in either direction 
+				mov_space_range_X = [-1.0, 2.0];
+				mov_space_range_Y = [-1.0, 2.0];
+				exclude_samples_idx = [];
+		end
+		
+		% as first approximation, just scale the mov_space_range to screen
+		% pixel range [0 1920], [0, 1080]
+		pixel_space_range_X = [0 1920];
+		pixel_space_range_Y = [0 1080];
+		
+		% try naively to just scale mov_space_range into screen_pixel_range
+		% these factors convert from mov to screen: mov * gain - offset
+		calibration.gain_x = (pixel_space_range_X(2) - pixel_space_range_X(1)) / (mov_space_range_X(2) - mov_space_range_X(1));
+		calibration.gain_y = (pixel_space_range_Y(2) - pixel_space_range_Y(1)) / (mov_space_range_Y(2) - mov_space_range_Y(1));		
+		calibration.offset_x = -mov_space_range_X(1) + (pixel_space_range_X(1) * ((mov_space_range_X(2) - mov_space_range_X(1)) * 1/ (pixel_space_range_X(2) - pixel_space_range_X(1))));
+		calibration.offset_y = -mov_space_range_Y(1) + (pixel_space_range_Y(1) * ((mov_space_range_Y(2) - mov_space_range_Y(1)) * 1/ (pixel_space_range_Y(2) - pixel_space_range_Y(1))));
+		
+		
+		%% fancy semi-automatic method?
+		%al_eventide_gaze_x_list = fn_calc_and_apply_gain_and_offset_adjustments_between_vectors(fix_target_x_list, screen_pixel_range_X, raw_eventide_gaze_x_list, mov_space_range_X, fullfile(gaze_tracker_logfile_path, [gaze_col_name_list.stem, '.X.fixation_dots.gain_offset.mat']));
+		%cal_eventide_gaze_y_list = fn_calc_and_apply_gain_and_offset_adjustments_between_vectors(fix_target_y_list, screen_pixel_range_Y, raw_eventide_gaze_y_list, mov_space_range_Y, fullfile(gaze_tracker_logfile_path, [gaze_col_name_list.stem, '.Y.fixation_dots.gain_offset.mat']));
+		
+		% we need something approximating cal_eventide_gaze_x_list, cal_eventide_gaze_y_list
+		cal_eventide_gaze_x_list = (raw_eventide_gaze_x_list + calibration.offset_x) .* calibration.gain_x;
+		cal_eventide_gaze_y_list = (raw_eventide_gaze_y_list + calibration.offset_y) .* calibration.gain_y;
+		
+		% try to adjust that the average positions match between fix and
+		% mov
+		
+		valid_sample_idx = union(find(fix_target_x_list ~= 0), find(fix_target_y_list ~= 0));
+		valid_sample_idx = setdiff(valid_sample_idx, exclude_samples_idx);
+		
+		fix_mean_x = mean(fix_target_x_list(valid_sample_idx));
+		fix_mean_y = mean(fix_target_y_list(valid_sample_idx));
+		
+		mov_mean_x = mean(cal_eventide_gaze_x_list(valid_sample_idx));
+		mov_mean_y = mean(cal_eventide_gaze_y_list(valid_sample_idx));
+		
+		% align the mean x and y positions for better display later
+		cal_eventide_gaze_x_list = cal_eventide_gaze_x_list + (fix_mean_x - mov_mean_x);
+		cal_eventide_gaze_y_list = cal_eventide_gaze_y_list + (fix_mean_y - mov_mean_y);
+		
+	otherwise
+		error(['tracker_type: ', tracker_type, ' not yet supported.']);
+end
+
+
+
 
 
 % calculate the pixel displacement between consecutive samples
 displacement_x_list = diff(cal_eventide_gaze_x_list);
-displacement_x_list(end+1) = NaN;	% we want the displacement for all samples so thatr all indices match
+displacement_x_list(end+1) = NaN;	% we want the displacement for all samples so that all indices match
 
 displacement_y_list = diff(cal_eventide_gaze_y_list);
-displacement_y_list(end+1) = NaN;	% we want the displacement for all samples so thatr all indices match
+displacement_y_list(end+1) = NaN;	% we want the displacement for all samples so that all indices match
 
 % now calculate the total displacement as euclidean distance in 2D
 % for any fixed sampling rate this velocity in pixels/sample correlates
@@ -310,7 +445,7 @@ FTBS_cn = fixation_target.by_sample.cn;
 
 fixation_target.by_sample.table = zeros([size(data_struct.data, 1), 4]);
 fixation_target.by_sample.table(:, 1:2) = [data_struct.data(:, ds_colnames.FixationPointX),(data_struct.data(:, ds_colnames.FixationPointY))];
-fixation_target.by_sample.table(:, FTBS_cn.FixationPointID) = -1; % faster than NaN ad also not a valid index
+fixation_target.by_sample.table(:, FTBS_cn.FixationPointID) = -1; % faster than NaN and also not a valid index
 fixation_target.by_sample.table(:, FTBS_cn.timestamp) = timestamp_list;
 
 % assign an ID to each fixation target position
@@ -393,6 +528,9 @@ bad_target_sample_points_idx = find(good_target_sample_points_lidx == 0);
 if isfield(data_struct.cn, confidence_col_name)
 	good_confidence_sample_points_idx = find(data_struct.data(:, data_struct.cn.(confidence_col_name)) >= min_confidence);
 	good_target_sample_points_idx = intersect(good_target_sample_points_idx, good_confidence_sample_points_idx);
+	% also exclude points from the edge of the pupil and world camera,
+	% these are unlikely real useful samples
+	good_target_sample_points_idx = setdiff(good_target_sample_points_idx, exclude_samples_idx);
 end
 
 
@@ -404,7 +542,8 @@ set(gcf(), 'Units', 'centimeters', 'Position', output_rect, 'PaperPosition', out
 
 
 plot(fix_target_x_list(:), fn_convert_eventide2_matlab_coord(fix_target_y_list(:)),'s','MarkerSize',10,'MarkerFaceColor',[1 0 0]);
-set(gca(), 'XLim', [(960-300) (960+300)], 'YLim', [(1080-500-200) (1080-500+400)]);
+%set(gca(), 'XLim', [(960-300) (960+300)], 'YLim', [(1080-500-200) (1080-500+400)]);
+set(gca(), 'XLim', [(960-600) (960+600)], 'YLim', [(1080-500-300) (1080-500+500)]);
 hold on
 % full traces all points with lines in between
 plot(cal_eventide_gaze_x_list(:), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(:)),'b','LineWidth', 1, 'Color', [0.8 0.8 0.8])
@@ -415,8 +554,12 @@ plot(cal_eventide_gaze_x_list(low_velocity_samples_idx), fn_convert_eventide2_ma
 % points immediately after fixation point onsets, when the sunbject can not fixate
 plot(cal_eventide_gaze_x_list(bad_target_sample_points_idx), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(bad_target_sample_points_idx)), 'LineWidth', 1, 'LineStyle', 'none', 'Color', 'r', 'Marker', '.', 'Markersize', 1);
 % surviving points
-plot(cal_eventide_gaze_x_list(fixation_target_visible_sample_idx), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(fixation_target_visible_sample_idx)), 'LineWidth', 1, 'LineStyle', 'none', 'Color', [0 0.8 0], 'Marker', '.', 'Markersize', 1);
+plot(cal_eventide_gaze_x_list(fixation_target_visible_sample_idx), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(fixation_target_visible_sample_idx)), 'LineWidth', 1, 'LineStyle', 'none', 'Color', [0 0.6 0], 'Marker', '.', 'Markersize', 1);
 %CLEAN-UP CURSOR
+
+%TODO:
+%	during selection of the cloud centers mark those samples acquired while
+%	the respective fixation target was visible
 
 
 
@@ -432,7 +575,13 @@ end
 for i_fix_target = 1 : length(find(unique_fixation_targets))
 	unique_fixation_target_id = unique_fixation_targets(nonzero_unique_fixation_target_idx(i_fix_target));
 	
-	title(['Select the center of the gaze sample cloud belonging to fixzation target ', num2str(unique_fixation_target_id), ', press enter after selection. (use delete to erase)'], 'FontSize', 14);
+	title(['Select the center of the gaze sample cloud belonging to fixation target ', num2str(unique_fixation_target_id), ', press enter after selection. (use delete to erase)'], 'FontSize', 14);
+	% plot the samples acquired while the current fixation position was
+	% visible.
+	current_target_ID_idx = find(fixation_target.by_sample.table(:, FTBS_cn.FixationPointID) == unique_fixation_target_id);
+	cur_fixation_target_visible_sample_idx = intersect(fixation_target_visible_sample_idx, current_target_ID_idx);
+	plot(cal_eventide_gaze_x_list(cur_fixation_target_visible_sample_idx), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(cur_fixation_target_visible_sample_idx)), 'LineWidth', 1, 'LineStyle', 'none', 'Color', [0 1.0 0], 'Marker', '.', 'Markersize', 1);
+
 	plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', 'r', 'Marker', '+', 'Markersize', 10);
 	
 	% if there is a stored cluster center for this fixation target, display
@@ -466,7 +615,10 @@ for i_fix_target = 1 : length(find(unique_fixation_targets))
 	x_y_mouse_y_flipped(i_fix_target, 2) = tmp_y_list(end);
 	
 	if ~isnan(tmp_x_list(end)) && ~isnan(tmp_y_list(end))
-		
+		% make the highlighted points
+		plot(cal_eventide_gaze_x_list(cur_fixation_target_visible_sample_idx), fn_convert_eventide2_matlab_coord(cal_eventide_gaze_y_list(cur_fixation_target_visible_sample_idx)), 'LineWidth', 1, 'LineStyle', 'none', 'Color', [0 0.6 0], 'Marker', '.', 'Markersize', 1);
+		plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', 'r', 'Marker', '+', 'Markersize', 10);
+
 		plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', [0.8 0 0], 'Marker', '+', 'Markersize', 10);
 		plot(x_y_mouse_y_flipped(i_fix_target, 1), x_y_mouse_y_flipped(i_fix_target, 2), 'LineWidth', 2, 'LineStyle', 'none', 'Color', cluster_center_color, 'Marker', 'x', 'Markersize', 10);
 		% show the
@@ -479,8 +631,12 @@ for i_fix_target = 1 : length(find(unique_fixation_targets))
 	end
 end
 hold off
-xlim([(960-300) (960+300)]);
-ylim ([(1080-500-200) (1080-500+400)]);
+%xlim([(960-300) (960+300)]);
+%ylim ([(1080-500-200) (1080-500+400)]);
+
+set(gca(), 'XLim', [(960-600) (960+600)], 'YLim', [(1080-500-300) (1080-500+500)]);
+
+
 %axis equal
 
 write_out_figure(target_and_cluster_postions_fh, fullfile(gaze_tracker_logfile_path, 'target_and_cluster_postions.pdf'));
@@ -567,6 +723,10 @@ selected_samples_idx = intersect(selected_samples_idx, find(fixation_target.by_s
 
 % re-register the eventIDE gaze columns and display raw and re-registered
 % selected samples
+
+	histogram(per_sample_euclidean_displacement_pix_list(intersect(good_target_sample_points_idx, find(fixation_target.by_sample.table(:, 3)))), (0.00:0.005:5.0));
+
+
 
 % moving (matlab coordinates)
 all_gaze_selected_samples = [cal_eventide_gaze_x_list(:) cal_eventide_gaze_y_list(:)];
@@ -746,6 +906,9 @@ for i_transformationType = 1 : length(transformationType_list)
 	
 end
 
+end % loop over data_row_types
+
+
 % construct the output name
 output_mat_filename = ['GAZEREG.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
 % save to the current directory
@@ -775,7 +938,7 @@ end
 
 % check whether the path exists, create if not...
 [pathstr, name, img_type] = fileparts(outfile_fqn);
-if isempty(dir(pathstr)),
+if isempty(dir(pathstr))
 	mkdir(pathstr);
 end
 
@@ -1328,6 +1491,160 @@ if ~isempty(anchor_idx)
 	next_dot_idx = next_dot_idx(1);
 	subject_name = sessionID(anchor_idx+3:dot_idx(next_dot_idx) -1);
 end
+
+return
+end
+
+
+function [ cal_eventide_gaze_x_list ] = fn_calc_and_apply_gain_and_offset_adjustments_between_vectors( ref_space_vector, ref_space_range, mov_space_vector, mov_space_range, gain_off_set_calibration_FQN )
+cal_eventide_gaze_x_list = [];
+
+% this uses the regular alignment of the fixation dots to figure out the
+% gain and offset refquired to translate between reference and mov(able)
+% space
+
+%TODO, find all XY fix pairs and look at the distributions of only those
+%fixation samples for each pair individually, resulting in sets in which
+%each histogram should only have a single peak each, then feed these
+%point combinations through an affine alignment?
+
+
+
+
+figure('Name', '1D alignment');
+fix_ah = subplot(2, 1, 1);
+% the fixation dor positions
+[N_fix, fix_edges, fix_bin] = histcounts(ref_space_vector, (ref_space_range(1):1:ref_space_range(2)));
+fix_bin_center_list = fix_edges(1:end-1) + diff(fix_edges)*0.5;
+fix_h = plot(fix_bin_center_list, N_fix);
+hold on
+
+[fix_pks, fix_locs, fix_w, fix_p] = findpeaks(N_fix, fix_bin_center_list);
+findpeaks(N_fix, fix_bin_center_list);
+fix_h = plot(fix_bin_center_list, N_fix);
+fix_y_lim = get(fix_ah, 'YLim');
+hold off
+%gain_off_set_calibration_FQN = 
+
+
+mov_ah = subplot(2, 1, 2);
+% the gaze positions
+% mov_space_range(1) = min(mov_space_vector);
+% mov_space_range(2) = max(mov_space_vector);
+mov_space_spacing = diff(mov_space_range) / ((ref_space_range(2) - ref_space_range(1)) / 1);
+[N_mov1, mov_edges1, bin] = histcounts(mov_space_vector, (mov_space_range(1):mov_space_spacing:mov_space_range(2)));
+mov_bin_center_list1 = mov_edges1(1:end-1) + diff(mov_edges1)*0.5;
+mov_h1 = plot(mov_bin_center_list1, N_mov1);
+mov_y_lim1 = get(mov_ah, 'YLim');
+
+hold on
+
+
+mov_space_spacing = diff(mov_space_range) / ((ref_space_range(2) - ref_space_range(1)) / 32);
+[N_mov, mov_edges, bin] = histcounts(mov_space_vector, (mov_space_range(1):mov_space_spacing:mov_space_range(2)));
+mov_bin_center_list = mov_edges(1:end-1) + diff(mov_edges)*0.5;
+mov_h = plot(mov_bin_center_list, N_mov);
+mov_y_lim = get(mov_ah, 'YLim');
+
+[mov_pks, mov_locs, mov_w, mov_p] = findpeaks(N_mov, mov_bin_center_list);
+
+findpeaks(N_mov, mov_bin_center_list);
+mov_h = plot(mov_bin_center_list1, N_mov1 * (mov_y_lim(2)/mov_y_lim1(2)));
+mov_y_lim = get(mov_ah, 'YLim');
+hold off;
+
+
+
+% get the mov_locs from the lenght(fix_pks) highest peaks from mov_pks
+[sorted_mov_peak_heights, sort_idx] = sort(mov_pks);
+threshold_height = sorted_mov_peak_heights(end-2);
+
+highest_N_peak_locs_idx = find(mov_pks >= threshold_height);
+
+sorted_mov_peak_locs = mov_locs(highest_N_peak_locs_idx);
+proto_matched_mov_locs = sorted_mov_peak_locs(1:length(fix_pks));
+proto_matched_fix_locs = fix_locs(1:length(fix_pks));
+
+
+colors = lines;
+for i_peak = 1 : length(fix_pks)
+	hold(fix_ah, 'on');
+	plot(fix_ah, [fix_locs(i_peak), fix_locs(i_peak)], fix_y_lim, 'Color', colors(i_peak, :));
+	hold(fix_ah, 'off');
+	hold(mov_ah, 'on');
+	plot(mov_ah, [sorted_mov_peak_locs(i_peak), sorted_mov_peak_locs(i_peak)], mov_y_lim, 'Color', colors(i_peak, :));
+	hold(mov_ah, 'off');
+	
+end	
+
+% now find the best offset and gain to transform 
+
+
+return
+end
+
+
+
+function [] = fn_select_n_points_from_axis( num_points, axis_handle, gain_off_set_calibration_FQN)
+% see whether points already exist?
+if exist(gain_off_set_calibration_FQN, 'file')
+	load(gain_off_set_calibration_FQN);
+else
+	% pre allocate
+	x_y_mouse_y_flipped = nan([length(nonzero_unique_fixation_target_idx), 2]);
+end
+% manually select all cluster centers
+for i_fix_target = 1 : length(find(unique_fixation_targets))
+	unique_fixation_target_id = unique_fixation_targets(nonzero_unique_fixation_target_idx(i_fix_target));
+	
+	title(['Select the center of the gaze sample cloud belonging to fixzation target ', num2str(unique_fixation_target_id), ', press enter after selection. (use delete to erase)'], 'FontSize', 14);
+	plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', 'r', 'Marker', '+', 'Markersize', 10);
+	
+	% if there is a stored cluster center for this fixation target, display
+	% this
+	if ~isnan(x_y_mouse_y_flipped(i_fix_target, 1)) || ~isnan(x_y_mouse_y_flipped(i_fix_target, 2))
+		plot(x_y_mouse_y_flipped(i_fix_target, 1), x_y_mouse_y_flipped(i_fix_target, 2), 'LineWidth', 2, 'LineStyle', 'none', 'Color', [0 0 0.5], 'Marker', '+', 'Markersize', 10);
+		stored_tmp_x_list = x_y_mouse_y_flipped(i_fix_target, 1);
+		stored_tmp_y_list = x_y_mouse_y_flipped(i_fix_target, 2);
+	else
+		stored_tmp_x_list = [];
+		stored_tmp_y_list = [];
+	end
+	% select a new cluster center
+	[tmp_x_list, tmp_y_list]= getpts;
+	if isempty(tmp_x_list)
+		tmp_x_list = NaN;
+		tmp_y_list = NaN;
+		% keep the stored points if the user did not select new valid
+		% points
+		if ~isempty(stored_tmp_x_list)
+			tmp_x_list = stored_tmp_x_list;
+		end
+		if ~isempty(stored_tmp_y_list)
+			tmp_y_list = stored_tmp_y_list;
+		end
+	end
+	
+	% getpts returns matlab coordinates, indicate that with the _flipped
+	% suffix
+	x_y_mouse_y_flipped(i_fix_target, 1) = tmp_x_list(end);
+	x_y_mouse_y_flipped(i_fix_target, 2) = tmp_y_list(end);
+	
+	if ~isnan(tmp_x_list(end)) && ~isnan(tmp_y_list(end))
+		
+		plot(fixation_target_position_table(unique_fixation_target_id, 1), fn_convert_eventide2_matlab_coord(fixation_target_position_table(unique_fixation_target_id, 2)), 'LineWidth', 2, 'LineStyle', 'none', 'Color', [0.8 0 0], 'Marker', '+', 'Markersize', 10);
+		plot(x_y_mouse_y_flipped(i_fix_target, 1), x_y_mouse_y_flipped(i_fix_target, 2), 'LineWidth', 2, 'LineStyle', 'none', 'Color', cluster_center_color, 'Marker', 'x', 'Markersize', 10);
+		% show the
+		tmp_radius = acceptable_radius_pix;
+		tmp_diameter = 2 * tmp_radius;
+		rectangle('Position',[x_y_mouse_y_flipped(i_fix_target, 1)-tmp_radius x_y_mouse_y_flipped(i_fix_target, 2)-tmp_radius tmp_diameter tmp_diameter],'Curvature',[1,1], 'EdgeColor', cluster_center_color, 'LineWidth', 1);
+		%daspect([1,1,1])
+	else
+		disp(['No (valid) coordinates selected for the last target position (', num2str(unique_fixation_target_id), ')']);
+	end
+end
+
+save(gain_off_set_calibration_FQN, 'x_y_mouse_y_flipped');
 
 return
 end
