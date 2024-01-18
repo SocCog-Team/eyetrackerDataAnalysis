@@ -23,9 +23,8 @@ function [ registration_struct ] = fn_gaze_recalibrator_v02(gaze_tracker_logfile
 %	use set(gca(), 'YDir', 'reversed') instead of the manual conversion
 %	between eventIDE and matlab coordinates (also look at the getpoints()
 %	call.
-%	Deal with pupillabs calibration data files
 %
-
+%	add the data column names to the registration structs...
 
 
 tictoc_timestamp_list.(mfilename).start = tic;
