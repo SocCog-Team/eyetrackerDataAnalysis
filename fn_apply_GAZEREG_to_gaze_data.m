@@ -7,9 +7,6 @@ out_gaze_data_struct = gaze_data_struct;
 tracker_type = [];
 if ~isempty(regexpi(gaze_data_struct.info.tracker_name_from_filename, 'eyelink'))
 	tracker_type = 'eyelink';
-	data_colname_stem_list = {'Left_Eye_Raw', 'Right_Eye_Raw'};
-	XY_data_colname_list = {{'Left_Eye_Raw_X', 'Left_Eye_Raw_Y'}, ...
-		{'Right_Eye_Raw_X', 'Right_Eye_Raw_Y'}};
 end
 	
 if ~isempty(regexpi(gaze_data_struct.info.tracker_name_from_filename, 'pupillabs'))
@@ -42,9 +39,9 @@ for i_calibration_set_ID = 1 : length(GAZEREG_calibration_setID_list)
 			cur_columndata_stem_list(cur_info_idx) = [];
 		end
 		
-		% only create this after we know the number of data columns
+		% only create this once after we know the number of data columns
 		if isempty(transformed_gaze_data_array)
-			transformed_gaze_data_array = nan([n_samples_total, (2 * length(cur_columndata_stem_list))]);
+			transformed_gaze_data_array = nan([n_samples_total, (length(cur_columndata_stem_list) * 2)]); % *2 as we always have X and Y data
 			transformed_col_name_list = {};
 		end
 		
@@ -79,14 +76,18 @@ for i_calibration_set_ID = 1 : length(GAZEREG_calibration_setID_list)
 				gaze_data_struct.data(cur_cal_set_ID_data_idx, gaze_data_struct.cn.(Y_col_name))]);			
 		end
 	else
-		disp([mfilename, '; WARN: No transformation struct fpound for requested tranformation type ', transformationType]);
+		disp([mfilename, '; WARN: No transformation struct found for requested tranformation type ', transformationType]);
 		return
 	end
 	
 end	%i_calibration_set_ID
 
-% now loop over the columns and add these to the data table
+% add columns (numeric array) and column names to the gaze_data_struct
 out_gaze_data_struct = fn_handle_data_struct('add_columns', out_gaze_data_struct, transformed_gaze_data_array, transformed_col_name_list);
+
+out_gaze_data_struct.GAZEREG.out_gaze_data_struct = out_gaze_data_struct;
+out_gaze_data_struct.GAZEREG.tracker_type = tracker_type;
+
 
 return
 end

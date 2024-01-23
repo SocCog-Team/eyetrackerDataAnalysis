@@ -160,6 +160,18 @@ velocity_threshold_pixels_per_sample = 0.5;
 data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T121142.A_Curius.B_None.SCP_01.sessiondir');
 gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T121142.A_Curius.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
 reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+close all
+
+
+% %%Pupillabs Elmo B
+tracker_type = 'pupillabs';
+acceptable_radius_pix = 20;
+velocity_threshold_pixels_per_sample = 0.5;
+data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T115050.A_None.B_Elmo.SCP_01.sessiondir');
+gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T115050.A_None.B_Elmo.SCP_01.TID_PupilLabsTrackerB.trackerlog');
+reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+close all
+
 
 
 
@@ -171,6 +183,7 @@ velocity_threshold_pixels_per_sample = 0.05;
 data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190805', '20190805T122130.A_Elmo.B_None.SCP_01.sessiondir');
 gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190805T122130.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
 reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+close all
 
 
 % %%Pupillabs test AM (PL 3.5.1) HPrig Pupil0
@@ -182,6 +195,7 @@ velocity_threshold_pixels_per_sample = 0.5;
 data_dir = fullfile(net_data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2024', '240109', '20240109T150811.A_AM.B_None.SCP_01.sessiondir');
 gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20240109T150811.A_AM.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
 reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+close all
 
 
 

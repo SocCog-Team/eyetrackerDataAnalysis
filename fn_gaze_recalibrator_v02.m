@@ -237,7 +237,8 @@ nonvar_calibration_set_ID_names = data_struct.unique_lists.(nonvar_calibration_s
 
 
 % construct the output name
-output_mat_filename = ['GAZEREGv02.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
+%OLD_output_mat_filename = ['GAZEREGv02.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
+output_mat_filename = ['GAZEREGv03.SESSIONID_', sessionID, '.SIDEID_', side, '.SUBJECTID_', subject_name, '.TRACKERID_', tracker_type, '.ELEMENTID_', tracker_elementID, '.mat'];
 
 
 
