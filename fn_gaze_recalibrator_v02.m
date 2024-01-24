@@ -52,8 +52,15 @@ debug = 0;
 % exclude samples with higher instantaneous veolicity than this value, this
 % will allow to reject samples during saccades
 if ~exist('velocity_threshold_pixels_per_sample', 'var') || isempty(velocity_threshold_pixels_per_sample)
-	velocity_threshold_pixels_per_sample = 0.05;
+	switch tracker_type
+		case 'eyelink'
+			velocity_threshold_pixels_per_sample = 0.05;
+		case 'pupillabs'
+			velocity_threshold_pixels_per_sample = 0.5;
+	end
 end
+
+
 
 % how many milliseconds to ignore after the onset of a new fixation target,
 % to allow the subject to saccade to the new target
@@ -64,15 +71,23 @@ end
 % this defines the radius in pixels around the center of the cluster
 % selector for the tested gaze target positions
 if ~exist('acceptable_radius_pix', 'var') || isempty(acceptable_radius_pix)
-	acceptable_radius_pix = 10;
+	switch tracker_type
+		case 'eyelink'
+			acceptable_radius_pix = 10;
+		case 'pupillabs'
+			acceptable_radius_pix = 20;
+	end
 end
 
 % this defines the registration method to use to generate the mapping
 % between identified sample positions and corresponding target positions
 if ~exist('transformationType', 'var') || isempty(transformationType)
-	transformationType = 'affine';
+	% transformationType = 'affine';
 	% 	transformationType = 'polynomial';
+	% default to all
 	transformationType = {'affine', 'polynomial', 'pwl', 'lwm'};
+	% only affine and polynomial work somewhat reliably
+	%transformationType = {'affine', 'polynomial'};
 end
 
 % make sure things are as expected
