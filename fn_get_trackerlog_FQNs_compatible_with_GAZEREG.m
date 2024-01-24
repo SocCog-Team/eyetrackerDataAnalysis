@@ -2,8 +2,11 @@ function [ compatible_trackerlog_fqn_list ] = fn_get_trackerlog_FQNs_compatible_
 %FN_GET_TRACKERLOG_FQNS_COMPATIBLE_WITH_GAZEREG Summary of this function goes here
 %   Detailed explanation goes here
 
-find_all_files_verbosity = 0;
 compatible_tracker_log_fqn_list = [];
+
+find_all_files_verbosity = 0;
+calibration_EVE_dir_match_string = ['*EyeTrackingCalibrator*.eve*'];
+
 
 [cur_GAZEREG_dir, cur_GAZEREG_id] = fileparts(cur_GAZEREG_fqn);
 
@@ -21,7 +24,7 @@ for i_entry = 1 : length(compatible_trackerlog_fqn_list)
 	end
 	% check wether it is a calibration session, and exclude if it is
 	[cur_entry_dir, ~, ~] = fileparts(compatible_trackerlog_fqn_list{i_entry});
-	if ~isempty(dir(fullfile(cur_entry_dir, '..', ['*EyeTrackingCalibrator*.eve*'])))
+	if ~isempty(dir(fullfile(cur_entry_dir, '..', calibration_EVE_dir_match_string)))
 		exclude_entry_list(i_entry) = 1;
 	end
 	% reduce the name end to '.trackerlog' for automatic file handling
