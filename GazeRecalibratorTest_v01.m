@@ -153,25 +153,25 @@ end
 
 
 
-% %%Pupillabs Curius A
-tracker_type = 'pupillabs';
-acceptable_radius_pix = 20;
-velocity_threshold_pixels_per_sample = 0.5;
-data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T121142.A_Curius.B_None.SCP_01.sessiondir');
-gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T121142.A_Curius.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
-reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-close all
-
-
-% %%Pupillabs Elmo B
-tracker_type = 'pupillabs';
-acceptable_radius_pix = 20;
-velocity_threshold_pixels_per_sample = 0.5;
-data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T115050.A_None.B_Elmo.SCP_01.sessiondir');
-gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T115050.A_None.B_Elmo.SCP_01.TID_PupilLabsTrackerB.trackerlog');
-reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-close all
-
+% % %%Pupillabs Curius A
+% tracker_type = 'pupillabs';
+% acceptable_radius_pix = 20;
+% velocity_threshold_pixels_per_sample = 0.5;
+% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T121142.A_Curius.B_None.SCP_01.sessiondir');
+% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T121142.A_Curius.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
+% reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+% close all
+% 
+% 
+% % %%Pupillabs Elmo B
+% tracker_type = 'pupillabs';
+% acceptable_radius_pix = 20;
+% velocity_threshold_pixels_per_sample = 0.5;
+% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2023', '230623', '20230623T115050.A_None.B_Elmo.SCP_01.sessiondir');
+% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T115050.A_None.B_Elmo.SCP_01.TID_PupilLabsTrackerB.trackerlog');
+% reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
+% close all
+% 
 
 
 
@@ -200,5 +200,70 @@ close all
 
 
 %/Users/smoeller/DPZ/taskcontroller/SCP_DATA/SCP-CTRL-01/SESSIONLOGS/2020/200522/20200522T154606.A_20200522ID006S1.B_None.SCP_01.sessiondir/trackerlogfiles
+
+% % use this to automatically find all sessions requiring recalibrations and
+% % run those
+% loop_over_sessions = 1;
+% redo_existing_calibrations = 0; % otherwise just keep the existing GAZEREG
+% 
+% if (loop_over_sessions)
+% 	% define a subset of sessions by giving a base_dir
+% 	% where to searc
+% 	session_base_dir = 'Y:\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\2023\230703';
+% 	% what to search for
+% 	trackerlog_dir_wildcard_string_list = {'*.TID_PupilLabsTrackerA.trackerlog*', '*.TID_PupilLabsTrackerB.trackerlog*', '*.TID_EyeLinkProxyTrackerA.trackerlog*'};
+% 	
+% 	find_all_files_verbosity = 0;
+% 	calibration_EVE_dir_match_string = ['*EyeTrackingCalibrator*.eve*'];
+% 
+% 	% find the gaze calibration sessions by looking at EVE file names
+% 	% containing the following match string ['*EyeTrackingCalibrator*.eve*']
+% 	GAZEREG_sessiondir_list = find_all_files(session_base_dir, calibration_EVE_dir_match_string, find_all_files_verbosity);
+% 	if ~iscell(GAZEREG_sessiondir_list)
+% 		GAZEREG_sessiondir_list = {GAZEREG_sessiondir_list};
+% 	end
+% 	
+% 	% loop over all proto_GAZEREG_sessiondir_list and collect all
+% 	% trackerlog files
+% 	calibration_tarckerlog_fqn_list = {};
+% 	
+% 	for i_GAZEREG_sessiondir_list = 1 : length(GAZEREG_sessiondir_list)
+% 		cur_GAZEREG_sessiondir = fileparts(GAZEREG_sessiondir_list{i_GAZEREG_sessiondir_list});
+% 		for i_trackerlog_wildcard = 1 : length(trackerlog_dir_wildcard_string_list)
+% 			cur_trackerlog_wildcard = trackerlog_dir_wildcard_string_list{i_trackerlog_wildcard};
+% 			cur_trackerlog_wildcard_fqn_list =  find_all_files(cur_GAZEREG_sessiondir, cur_trackerlog_wildcard, find_all_files_verbosity);
+% 	
+% 			cur_trackerlog_wildcard_fqn_list = regexprep(cur_trackerlog_wildcard_fqn_list, '\.trackerlog.*$', '.trackerlog');
+% 			cur_trackerlog_wildcard_fqn_list = unique(cur_trackerlog_wildcard_fqn_list);
+% 			if ~iscell(cur_trackerlog_wildcard_fqn_list)
+% 				cur_trackerlog_wildcard_fqn_list = {cur_trackerlog_wildcard_fqn_list};
+% 			end			
+% 			calibration_tarckerlog_fqn_list = [calibration_tarckerlog_fqn_list, cur_trackerlog_wildcard_fqn_list];
+% 		end % i_trackerlog_wildcard
+% 	end
+% 
+% 
+% 	for i_calibration_tarckerlog_fqn = 1 : length(calibration_tarckerlog_fqn_list)
+% 		cur_calibration_tarckerlog_fqn = calibration_tarckerlog_fqn_list{i_calibration_tarckerlog_fqn};
+% 		disp(['Creating calibration transormation data from calibration file: ', cur_calibration_tarckerlog_fqn]);
+% 		[ trackerlog_info ] = fn_parse_tarckerlog_name(cur_calibration_tarckerlog_fqn);
+% 		
+% 		% figure out whether the current calibartion exists allready
+% 		[~, cur_gaze_reg_string] = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, 'version');
+% 		cur_GAZEREG_string = regexprep(trackerlog_info.GAZEREG_string, 'v\*', cur_gaze_reg_string);
+% 				
+% 		
+% 		if (redo_existing_calibrations) || ~isfile(fullfile(fileparts(cur_calibration_tarckerlog_fqn), cur_GAZEREG_string))
+% 			disp([mfilename, ': Running re-calibrator on ', cur_calibration_tarckerlog_fqn]);
+% 			reg_struct = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, trackerlog_info.TRACKERID);
+% 			close all
+% 		else
+% 			disp([mfilename, ': trackerlog already processed by re-calibrator, and redo_existing_calibrations not requested, skipping...']);
+% 		end
+% 	end	
+% 		
+% end
+
+
 end
 
