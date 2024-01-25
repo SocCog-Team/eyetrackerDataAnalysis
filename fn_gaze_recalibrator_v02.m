@@ -1,4 +1,4 @@
-function [ registration_struct ] = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N)
+function [ registration_struct, version_string, version ] = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N)
 %FN_GAZE_RECALIBRATOR Analyse simple dot following gaze mapping data to
 %generate better registration matrices to convert "raw" gaze data into
 %eventIDE pixel coordinates
@@ -34,6 +34,14 @@ fq_mfilename = mfilename('fullpath');
 mfilepath = fileparts(fq_mfilename);
 
 registration_struct = struct();
+
+version = 3;
+version_string = ['v', num2str(version, '%02d')];
+if strcmp(tracker_type, 'version')
+	disp([mfilename, ': only versio string requested...']);
+	return
+end
+
 
 % eventIDE sets the top left corner as (0,0), matlab sets the bottom left
 % corner to (0,0) to make the up down directions in matlab appear correct
@@ -243,7 +251,12 @@ registration_struct.info.polynomial_degree = polynomial_degree;
 data_struct = fnParseEventIDETrackerLog_v01(gaze_tracker_logfile_FQN, ';', [], []);
 ds_colnames = data_struct.cn;
 
-
+% check for empty data and skip
+if (size(data_struct.data, 1) < 2)
+	disp([mfilename, ': Trackerlog file empty: ', gaze_tracker_logfile_FQN]);
+	return
+end
+	
 n_calibration_set_IDs = length(data_struct.unique_lists.(calibration_set_ID_idx_unique_list_name));
 sanitized_calibration_set_ID_names = data_struct.unique_lists.(calibration_set_ID_idx_unique_list_name);
 calibration_set_ID_idx_data_col_idx = data_struct.cn.(calibration_set_ID_idx_colname);
@@ -253,7 +266,7 @@ nonvar_calibration_set_ID_names = data_struct.unique_lists.(nonvar_calibration_s
 
 % construct the output name
 %OLD_output_mat_filename = ['GAZEREGv02.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
-output_mat_filename = ['GAZEREGv03.SESSIONID_', sessionID, '.SIDEID_', side, '.SUBJECTID_', subject_name, '.TRACKERID_', tracker_type, '.ELEMENTID_', tracker_elementID, '.mat'];
+output_mat_filename = ['GAZEREG', version_string, '.SESSIONID_', sessionID, '.SIDEID_', side, '.SUBJECTID_', subject_name, '.TRACKERID_', tracker_type, '.ELEMENTID_', tracker_elementID, '.mat'];
 
 
 
