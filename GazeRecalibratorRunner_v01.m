@@ -38,84 +38,6 @@ if strcmp(transformationType, 'lwm')
 	polynomial_degree = 10;
 end
 
-% %% EyeLink decent HV9 eyelink calibration/validation, little distortions
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190729', '20190729T154225.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190729T154225.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-% % still decent eyelink calibration
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190705', '20190705T113230.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190705T113230.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-% % human HV9 calibration without validation, data from NHP heavy shearing
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190312', '20190312T071737.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190312T071737.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-% % human HV9 calibration without validation, data from NHP heavy shearing
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190320', '20190320T092435.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190320T092435.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-
-
-% % %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190805', '20190805T122130.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190805T122130.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-% %EyeLink HV9 eyelink calibration/validation with 17 target positions
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190816', '20190816T124444.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190816T124444.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-% %EyeLink HV9 eyelink calibration/validation with 41 target positions
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190822', '20190822T153520.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190822T153520.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-
-
-% %% PRIMATAR
-% %EyeLink HV9 eyelink calibration/validation with 41 target positions
-% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190222', '20190222T125802.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190222T125802.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-% % %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
-% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200107', '20200107T134055.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200107T134055.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-% % %EyeLink HV9 eyelink calibration/validation after the removal of the calibration files
-% data_dir = fullfile(data_base_dir, 'taskcontroller', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200109', '20200109T131751.A_Elmo.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200109T131751.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-%return
-
-
-% %%Pupillabs test
-% tracker_type = 'pupillabs';
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2019', '190419', '20190419T161006.A_190419ID111S1.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190419T161006.A_190419ID111S1.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-
-% %%Pupillabs test
-% tracker_type = 'pupillabs';
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '200522', '20200522T154315.A_20200522ID006S1.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20200522T154315.A_20200522ID006S1.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 
 
 % %%Pupillabs test (PL 3.4.0, Vlad/VI with chin rest) ficudial/surface
@@ -125,32 +47,6 @@ end
 % data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2021', '211110', '20211110T154657.A_VI.B_None.SCP_01.sessiondir');
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20211110T154657.A_VI.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-% %%Pupillabs test (PL 3.4.0, Vlad/VI with chin rest) Pupil0
-% tracker_type = 'pupillabs';
-% acceptable_radius_pix = 20;
-% velocity_threshold_pixels_per_sample = 0.5;
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2021', '211110', '20211110T154924.A_VI.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20211110T154924.A_VI.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-
-
-% %%Pupillabs test (PL 3.4.0, Vlad/VI with chin rest) ficudial/surface
-% tracker_type = 'pupillabs';
-% acceptable_radius_pix = 20;
-% velocity_threshold_pixels_per_sample = 0.5;
-% data_dir = fullfile(data_base_dir, 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2021', '211110', '20211110T154657.A_VI.B_None.SCP_01.sessiondir');
-% gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20211110T154657.A_VI.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
-% reg_struct = fn_gaze_recalibrator_v01(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
-
-
-
-
-
-
 
 
 % % %%Pupillabs Curius A
@@ -161,8 +57,8 @@ end
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T121142.A_Curius.B_None.SCP_01.TID_PupilLabsTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 % close all
-% 
-% 
+%
+%
 % % %%Pupillabs Elmo B
 % tracker_type = 'pupillabs';
 % acceptable_radius_pix = 20;
@@ -171,7 +67,7 @@ end
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20230623T115050.A_None.B_Elmo.SCP_01.TID_PupilLabsTrackerB.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 % close all
-% 
+%
 
 
 
@@ -184,8 +80,8 @@ end
 % gaze_tracker_logfile_FQN = fullfile(data_dir, 'trackerlogfiles', '20190805T122130.A_Elmo.B_None.SCP_01.TID_EyeLinkProxyTrackerA.trackerlog');
 % reg_struct = fn_gaze_recalibrator_v02(gaze_tracker_logfile_FQN, tracker_type, velocity_threshold_pixels_per_sample, saccade_allowance_time_ms, acceptable_radius_pix, transformationType, polynomial_degree, lwm_N);
 % close all
-% 
-% 
+%
+%
 % % %%Pupillabs test AM (PL 3.5.1) HPrig Pupil0
 % % 20240109T150811.A_AM.B_None.SCP_01.sessiondir
 % % test with new Detection Method filter in EventIDE (set to "2d c++" in this recording)
@@ -208,62 +104,85 @@ redo_existing_calibrations = 0; % otherwise just keep the existing GAZEREG
 
 if (loop_over_sessions)
 	% define a subset of sessions by giving a base_dir
-	% where to searc
-	session_base_dir = 'Y:\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\2023\230703';
-	% what to search for
-	trackerlog_dir_wildcard_string_list = {'*.TID_PupilLabsTrackerA.trackerlog*', '*.TID_PupilLabsTrackerB.trackerlog*', '*.TID_EyeLinkProxyTrackerA.trackerlog*'};
+	% where to search with wildcards...
+	% TODO: 20181114-, 2019, 202001-11, 2022
+	% done: 
+	% Elmo Ephys-sessions 2020/21/23, Curius Ephys-sessions 2023, 
+	% 2017: no gaze data
+	% 20181114-1231 (first gaze calibration data 20181114)
+	% 202101-12, 
+	% 202301-12, 
+	% 202401
+	meta_session_base_dir = dir(fullfile('Y:', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2018', '1812*'));
 	
+	% what to search for
+	trackerlog_dir_wildcard_string_list = {...
+		'*.TID_PupilLabsTrackerA.trackerlog*', '*.TID_PupilLabsTrackerB.trackerlog*', ...
+		'*.TID_EyeLinkProxyTrackerA.trackerlog*', '*.TID_EyeLinkProxyTrackerB.trackerlog*', ...
+		'*.TID_EyeLinkTrackerA.trackerlog*', '*.TID_EyeLinkTrackerB.trackerlog*'};
+		
 	find_all_files_verbosity = 0;
 	calibration_EVE_dir_match_string = ['*EyeTrackingCalibrator*.eve*'];
-
-	% find the gaze calibration sessions by looking at EVE file names
-	% containing the following match string ['*EyeTrackingCalibrator*.eve*']
-	GAZEREG_sessiondir_list = find_all_files(session_base_dir, calibration_EVE_dir_match_string, find_all_files_verbosity);
-	if ~iscell(GAZEREG_sessiondir_list)
-		GAZEREG_sessiondir_list = {GAZEREG_sessiondir_list};
-	end
 	
-	% loop over all proto_GAZEREG_sessiondir_list and collect all
-	% trackerlog files
-	calibration_tarckerlog_fqn_list = {};
-	
-	for i_GAZEREG_sessiondir_list = 1 : length(GAZEREG_sessiondir_list)
-		cur_GAZEREG_sessiondir = fileparts(GAZEREG_sessiondir_list{i_GAZEREG_sessiondir_list});
-		for i_trackerlog_wildcard = 1 : length(trackerlog_dir_wildcard_string_list)
-			cur_trackerlog_wildcard = trackerlog_dir_wildcard_string_list{i_trackerlog_wildcard};
-			cur_trackerlog_wildcard_fqn_list =  find_all_files(cur_GAZEREG_sessiondir, cur_trackerlog_wildcard, find_all_files_verbosity);
-	
-			cur_trackerlog_wildcard_fqn_list = regexprep(cur_trackerlog_wildcard_fqn_list, '\.trackerlog.*$', '.trackerlog');
-			cur_trackerlog_wildcard_fqn_list = unique(cur_trackerlog_wildcard_fqn_list);
-			if ~iscell(cur_trackerlog_wildcard_fqn_list)
-				cur_trackerlog_wildcard_fqn_list = {cur_trackerlog_wildcard_fqn_list};
-			end			
-			calibration_tarckerlog_fqn_list = [calibration_tarckerlog_fqn_list, cur_trackerlog_wildcard_fqn_list];
-		end % i_trackerlog_wildcard
-	end
-
-
-	for i_calibration_tarckerlog_fqn = 1 : length(calibration_tarckerlog_fqn_list)
-		cur_calibration_tarckerlog_fqn = calibration_tarckerlog_fqn_list{i_calibration_tarckerlog_fqn};
-		disp(['Creating calibration transormation data from calibration file: ', cur_calibration_tarckerlog_fqn]);
-		[ trackerlog_info ] = fn_parse_tarckerlog_name(cur_calibration_tarckerlog_fqn);
+	for i_session_base_dir = 1 : length(meta_session_base_dir)	
+		%session_base_dir = 'Y:\SCP_DATA\SCP-CTRL-01\SESSIONLOGS\2021\210104'; % 210730
 		
-		% figure out whether the current calibartion exists allready
-		[~, cur_gaze_reg_string] = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, 'version');
-		cur_GAZEREG_string = regexprep(trackerlog_info.GAZEREG_string, 'v\*', cur_gaze_reg_string);
+		session_base_dir = fullfile(meta_session_base_dir(i_session_base_dir).folder, meta_session_base_dir(i_session_base_dir).name);
 				
 		
-		if (redo_existing_calibrations) || ~isfile(fullfile(fileparts(cur_calibration_tarckerlog_fqn), cur_GAZEREG_string))
-			disp([mfilename, ': Running re-calibrator on ', cur_calibration_tarckerlog_fqn]);
-			reg_struct = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, trackerlog_info.TRACKERID);
-			close all
-		else
-			disp([mfilename, ': trackerlog already processed by re-calibrator, and redo_existing_calibrations not requested, skipping...']);
+		% find the gaze calibration sessions by looking at EVE file name3
+		% containing the following match string ['*EyeTrackingCalibrator*.eve*']
+		GAZEREG_sessiondir_list = find_all_files(session_base_dir, calibration_EVE_dir_match_string, find_all_files_verbosity);
+		if ~iscell(GAZEREG_sessiondir_list)
+			GAZEREG_sessiondir_list = {GAZEREG_sessiondir_list};
 		end
-	end	
 		
+		% loop over all proto_GAZEREG_sessiondir_list and collect all
+		% trackerlog files
+		calibration_tarckerlog_fqn_list = {};
+		
+		for i_GAZEREG_sessiondir_list = 1 : length(GAZEREG_sessiondir_list)
+			cur_GAZEREG_sessiondir = fileparts(GAZEREG_sessiondir_list{i_GAZEREG_sessiondir_list});
+			for i_trackerlog_wildcard = 1 : length(trackerlog_dir_wildcard_string_list)
+				cur_trackerlog_wildcard = trackerlog_dir_wildcard_string_list{i_trackerlog_wildcard};
+				cur_trackerlog_wildcard_fqn_list =  find_all_files(cur_GAZEREG_sessiondir, cur_trackerlog_wildcard, find_all_files_verbosity);
+				
+				cur_trackerlog_wildcard_fqn_list = regexprep(cur_trackerlog_wildcard_fqn_list, '\.trackerlog.*$', '.trackerlog');
+				cur_trackerlog_wildcard_fqn_list = unique(cur_trackerlog_wildcard_fqn_list);
+				if ~iscell(cur_trackerlog_wildcard_fqn_list)
+					cur_trackerlog_wildcard_fqn_list = {cur_trackerlog_wildcard_fqn_list};
+				end
+				calibration_tarckerlog_fqn_list = [calibration_tarckerlog_fqn_list, cur_trackerlog_wildcard_fqn_list];
+			end % i_trackerlog_wildcard
+		end
+		
+		
+		for i_calibration_tarckerlog_fqn = 1 : length(calibration_tarckerlog_fqn_list)
+			cur_calibration_tarckerlog_fqn = calibration_tarckerlog_fqn_list{i_calibration_tarckerlog_fqn};
+			disp(['Creating calibration transformation data from calibration file: ', cur_calibration_tarckerlog_fqn]);
+			[ trackerlog_info ] = fn_parse_tarckerlog_name(cur_calibration_tarckerlog_fqn);
+			
+			if ismember(trackerlog_info.SUBJECTID, {'TestA', 'TestB', 'testA', 'testB', 'testa', 'testb', 'MouseEmulator'})
+				disp([mfilename, ': Found TestA/TestB as SUBJECTID, skipping...']);
+				continue
+			end
+			
+			% figure out whether the current calibartion exists allready
+			[~, cur_gaze_reg_string] = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, 'version');
+			cur_GAZEREG_string = regexprep(trackerlog_info.GAZEREG_string, 'v\*', cur_gaze_reg_string);
+			
+			
+			if (redo_existing_calibrations) || ~isfile(fullfile(fileparts(cur_calibration_tarckerlog_fqn), cur_GAZEREG_string))
+				disp([mfilename, ': Running re-calibrator on ', cur_calibration_tarckerlog_fqn]);
+				reg_struct = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, trackerlog_info.TRACKERID);
+				close all
+			else
+				disp([mfilename, ': trackerlog already processed by re-calibrator, and redo_existing_calibrations not requested, skipping...']);
+			end
+		end
+	end
 end
-
+disp([mfilename, ': Done...']);
 
 end
 
