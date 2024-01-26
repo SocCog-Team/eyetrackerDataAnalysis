@@ -38,7 +38,7 @@ registration_struct = struct();
 version = 3;
 version_string = ['v', num2str(version, '%02d')];
 if strcmp(tracker_type, 'version')
-	disp([mfilename, ': only versio string requested...']);
+	disp([mfilename, ': only version string requested...']);
 	return
 end
 
@@ -302,6 +302,7 @@ for i_calibration_set_ID = 1 : n_calibration_set_IDs
 	fix_target_y_list = (data_struct.data(cur_calibration_set_ID_row_idx, ds_colnames.FixationPointY));
 	
 	
+	
 	% This only works if the eventIDE calbibration is for the same space
 	% for eyelink, both eyes come from the same camera and hence will work
 	% reasonably well with the same eventIDE offset and gain, good enough to
@@ -441,6 +442,12 @@ for i_calibration_set_ID = 1 : n_calibration_set_IDs
 	displacement_y_list = diff(cal_eventide_gaze_y_list);
 	displacement_y_list(end+1) = NaN;	% we want the displacement for all samples so that all indices match
 	
+	
+	if (sum(displacement_x_list, 'omitnan') == 0 && sum(displacement_y_list, 'omitnan') == 0)
+		disp([mfilename, ': data file seems to contain a constant fixation position, skipping...']);
+		return
+	end
+
 	% now calculate the total displacement as euclidean distance in 2D
 	% for any fixed sampling rate this velocity in pixels/sample correlates
 	% strongly with the instantaneous velocity in pixel/time
@@ -483,6 +490,11 @@ for i_calibration_set_ID = 1 : n_calibration_set_IDs
 	% now find the unique displayed fixation target positions
 	existing_fixation_target_x_y_coordinate_list = unique(fixation_target.by_sample.table(:, 1:2), 'rows');
 	
+	if size(existing_fixation_target_x_y_coordinate_list, 1) < 5
+		disp([mfilename, ': less than 3 calibration positions recorded, calibration impossible, skipping...']);
+		return
+	end
+		
 	% % find and exclude NaNs (these should not exist here, but if they do treat them properly)
 	% nan_2d_idx = isnan(existing_fixation_target_x_y_coordinate_list);
 	% nan_row_idx = find(sum(nan_2d_idx, 2));
@@ -973,12 +985,16 @@ end % loop over calibration_set_IDs
 
 
 % % construct the output name
-% output_mat_filename = ['GAZEREGv02.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
-% save to the current directory
-save(fullfile(gaze_tracker_logfile_path, output_mat_filename), 'registration_struct', 'out_registration_struct');
-% save to the day's directory.
-save(fullfile(gaze_tracker_logfile_path, '..', '..', output_mat_filename), 'registration_struct', 'out_registration_struct');
 
+if exist('out_registration_struct', 'var') && exist('registration_struct', 'var')
+	% output_mat_filename = ['GAZEREGv02.SID_', sessionID, '.SIDE_', side, '.SUBJECTID_', subject_name, '.', tracker_type, '.TRACKERELEMENTID_', tracker_elementID, '.mat'];
+	% save to the current directory
+	save(fullfile(gaze_tracker_logfile_path, output_mat_filename), 'registration_struct', 'out_registration_struct');
+	% save to the day's directory.
+	save(fullfile(gaze_tracker_logfile_path, '..', '..', output_mat_filename), 'registration_struct', 'out_registration_struct');
+else
+	disp([mfilename, ': No registration created, nothing to save...']);
+end
 
 % how long did it take?
 tictoc_timestamp_list.(mfilename).end = toc(tictoc_timestamp_list.(mfilename).start);
@@ -1522,8 +1538,8 @@ side = [];
 trackerID_string = [];
 [ ~, name, ~] = fileparts(gaze_tracker_logfile_FQN);
 
-identifier_list = {'EyeLinkProxyTrackerA', 'PupilLabsTrackerA', 'PupilLabsTrackerB', 'EyeLinkProxyTrackerB'};
-side_list = {'A', 'A', 'B', 'B'};
+identifier_list = {'EyeLinkTrackerA', 'EyeLinkProxyTrackerA', 'PupilLabsTrackerA', 'PupilLabsTrackerB', 'EyeLinkProxyTrackerB'};
+side_list = {'A', 'A', 'A', 'B', 'B'};
 
 for i_identifier = 1 : length(identifier_list)
 	cur_identifier = identifier_list{i_identifier};
