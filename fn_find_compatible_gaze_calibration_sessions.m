@@ -10,7 +10,7 @@ calibration_EVE_dir_match_string = ['*EyeTrackingCalibrator*.eve*'];
 % get some information for the current trackerlog file...
 [trackerlog_dir_fqn, trackerlog_name, trackerlog_ext] = fileparts(cur_tracker_log_fqn);
 trackerlog_name_ext = [trackerlog_name, trackerlog_ext];
-trackerlog_info = fn_parse_tarckerlog_name(trackerlog_name_ext);
+trackerlog_info = fn_parse_trackerlog_name(trackerlog_name_ext);
 
 
 session_dir_fqn = fileparts(trackerlog_dir_fqn);
@@ -61,7 +61,7 @@ for i_compatible_calibration_trackerlog =  1: length(compatible_calibration_trac
 	cur_compatible_calibration_trackerlog_fqn = compatible_calibration_trackerlog_fqn_list{i_compatible_calibration_trackerlog};
 	
 	[tmp_trackerlog_dir_fqn, tmp_trackerlog_name, tmp_trackerlog_ext] = fileparts(cur_compatible_calibration_trackerlog_fqn);
-	tmp_trackerlog_info = fn_parse_tarckerlog_name([tmp_trackerlog_name, tmp_trackerlog_ext]);
+	tmp_trackerlog_info = fn_parse_trackerlog_name([tmp_trackerlog_name, tmp_trackerlog_ext]);
 	% only search in the current directory
 	if ~isempty(dir(fullfile(tmp_trackerlog_dir_fqn, tmp_trackerlog_info.GAZEREG_match_string)))
 		recalibrated_compatible_calibration_trackerlog_ldx(i_compatible_calibration_trackerlog) = 1;

@@ -246,7 +246,7 @@ close all
 % 	for i_calibration_tarckerlog_fqn = 1 : length(calibration_tarckerlog_fqn_list)
 % 		cur_calibration_tarckerlog_fqn = calibration_tarckerlog_fqn_list{i_calibration_tarckerlog_fqn};
 % 		disp(['Creating calibration transormation data from calibration file: ', cur_calibration_tarckerlog_fqn]);
-% 		[ trackerlog_info ] = fn_parse_tarckerlog_name(cur_calibration_tarckerlog_fqn);
+% 		[ trackerlog_info ] = fn_parse_trackerlog_name(cur_calibration_tarckerlog_fqn);
 % 		
 % 		% figure out whether the current calibartion exists allready
 % 		[~, cur_gaze_reg_string] = fn_gaze_recalibrator_v02(cur_calibration_tarckerlog_fqn, 'version');

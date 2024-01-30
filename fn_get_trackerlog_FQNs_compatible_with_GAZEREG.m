@@ -1,4 +1,4 @@
-function [ compatible_trackerlog_fqn_list ] = fn_get_trackerlog_FQNs_compatible_with_GAZEREG( cur_GAZEREG_fqn, inputArg2)
+function [ compatible_trackerlog_fqn_list ] = fn_get_trackerlog_FQNs_compatible_with_GAZEREG( cur_GAZEREG_fqn )
 %FN_GET_TRACKERLOG_FQNS_COMPATIBLE_WITH_GAZEREG Summary of this function goes here
 %   Detailed explanation goes here
 

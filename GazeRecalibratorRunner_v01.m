@@ -105,15 +105,16 @@ redo_existing_calibrations = 0; % otherwise just keep the existing GAZEREG
 if (loop_over_sessions)
 	% define a subset of sessions by giving a base_dir
 	% where to search with wildcards...
-	% TODO: 20181114-, 2019, 202001-11, 2022
+	% TODO: 2019, 202001-11, 2022
 	% done: 
 	% Elmo Ephys-sessions 2020/21/23, Curius Ephys-sessions 2023, 
 	% 2017: no gaze data
 	% 20181114-1231 (first gaze calibration data 20181114)
+	% 202011-12
 	% 202101-12, 
 	% 202301-12, 
 	% 202401
-	meta_session_base_dir = dir(fullfile('Y:', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2018', '1812*'));
+	meta_session_base_dir = dir(fullfile('Y:', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', '2020', '2011*'));
 	
 	% what to search for
 	trackerlog_dir_wildcard_string_list = {...
@@ -160,7 +161,7 @@ if (loop_over_sessions)
 		for i_calibration_tarckerlog_fqn = 1 : length(calibration_tarckerlog_fqn_list)
 			cur_calibration_tarckerlog_fqn = calibration_tarckerlog_fqn_list{i_calibration_tarckerlog_fqn};
 			disp(['Creating calibration transformation data from calibration file: ', cur_calibration_tarckerlog_fqn]);
-			[ trackerlog_info ] = fn_parse_tarckerlog_name(cur_calibration_tarckerlog_fqn);
+			[ trackerlog_info ] = fn_parse_trackerlog_name(cur_calibration_tarckerlog_fqn);
 			
 			if ismember(trackerlog_info.SUBJECTID, {'TestA', 'TestB', 'testA', 'testB', 'testa', 'testb', 'MouseEmulator'})
 				disp([mfilename, ': Found TestA/TestB as SUBJECTID, skipping...']);

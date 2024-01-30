@@ -1,4 +1,4 @@
-function [ trackerlog_info ] = fn_parse_tarckerlog_name( orig_trackerlog_name )
+function [ trackerlog_info ] = fn_parse_trackerlog_name( orig_trackerlog_name )
 %FN_PARSE_TARCKERLOG_NAME Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,7 +9,7 @@ trackerlog_info = struct();
 [~, trackerlog_name, extension] = fileparts(orig_trackerlog_name);
 
 if ~strcmp(extension, '.trackerlog')
-	error([mfilename,': trackerlog_name should end in ''.trackerlog'', but does end in: ', extension]);
+	disp([mfilename,':WARN trackerlog_name should end in ''.trackerlog'', but does end in: ', extension]);
 	return
 end
 

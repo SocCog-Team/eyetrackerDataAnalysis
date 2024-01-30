@@ -58,7 +58,7 @@ for i_calibration_set_ID = 1 : length(GAZEREG_calibration_setID_list)
 			% where to put the data (needed for multi culumn formats like eyeling where each data table row contains data for left and right eye)
 			cur_col_offset = (2 * (i_col_data - 1));
 			
-			if length(transformed_col_name_list) < cur_col_offset
+			if length(transformed_col_name_list) < cur_col_offset || length(transformed_col_name_list) == 0
 				transformed_col_name_list(1 + cur_col_offset) = {[transformationType, '_registered_', X_col_name]};
 				transformed_col_name_list(2 + cur_col_offset) = {[transformationType, '_registered_', Y_col_name]};
 			else
