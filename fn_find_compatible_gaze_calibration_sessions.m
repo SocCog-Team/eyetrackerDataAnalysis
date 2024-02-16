@@ -3,6 +3,14 @@ function [ GAZEREG_FQN_list, GAZEREG_sessiondir_list, compatible_calibration_tra
 %   Detailed explanation goes here
 % for a given trackerlog file return compatible calibration sessions
 
+
+% start with all of these empty...
+GAZEREG_FQN_list = [];
+GAZEREG_sessiondir_list = [];
+compatible_calibration_trackerlog_fqn_list = [];
+non_recalibrated_calibration_trackerlog_fqn_list = [];
+
+
 find_all_files_verbosity = 0;
 calibration_EVE_dir_match_string = ['*EyeTrackingCalibrator*.eve*'];
 
@@ -37,6 +45,11 @@ end
 GAZEREG_sessiondir_list = proto_GAZEREG_sessiondir_list(~exclude_entry_list);
 if ~iscell(GAZEREG_sessiondir_list)
 	GAZEREG_sessiondir_list = {GAZEREG_sessiondir_list};
+end
+
+if isempty(GAZEREG_sessiondir_list)
+	disp([mfilename, ': No compatible calibration session found for ', trackerlog_file_match_string]);
+	return
 end
 
 compatible_calibration_trackerlog_fqn_list = [];
