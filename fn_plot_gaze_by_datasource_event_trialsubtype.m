@@ -4,6 +4,13 @@ function [] = fn_plot_gaze_by_datasource_event_trialsubtype( session_ID, event_n
 %add the correct slash independent of computer. even name is changed with
 %t
 
+timestamps.(mfilename).start = tic;
+disp(['Starting: ', mfilename]);
+dbstop if error
+fq_mfilename = mfilename('fullpath');
+% mfilepath = fileparts(fq_mfilename);
+
+
 % no GUI means no figure windows possible, so try to work around that
 if ~exist('InvisibleFigures', 'var') || isempty(InvisibleFigures)
 	InvisibleFigures = 0;
@@ -14,7 +21,7 @@ if (fnIsMatlabRunningInTextMode())
 end
 if (InvisibleFigures)
 	figure_visibility_string = 'off';
-	disp('Using visible figures, for speed.');
+	disp('Using invisible figures, for speed.');
 else
 	figure_visibility_string = 'on';
 	disp('Using visible figures, for debugging/formatting.');
@@ -25,12 +32,21 @@ output_format_string = '.pdf';
 plotting_options.panel_width_cm = 15;
 plotting_options.panel_height_cm = 12;
 plotting_options.margin_cm = 1;
+ci_alpha = 0.05;
+
 
 % colors for side choices as objective Sides (from perspective of A)
+% these work, but are pretty garish...
 colors.Al = [1 0 0];
 colors.Ar = [0 1 0];
 colors.Bl = [1 0 1];
 colors.Br = [0 0 1];
+% https://colorbrewer2.org/#type=diverging&scheme=BrBG&n=4
+colors.Al = [230,97,1]/255; % orange
+colors.Ar = [94,60,153]/255;% purple
+colors.Bl = [166,97,26]/255;% brown/beige
+colors.Br = [1,133,113]/255;% tan/teal greenish
+
 
 if ~exist('session_ID', 'var') || isempty(session_ID)
 	session_ID = '20230623T124557.A_Curius.B_Elmo.SCP_01';
@@ -76,6 +92,7 @@ if ~exist('data_basedir', 'var') || isempty(data_basedir)
 	end
 end
 
+stat_struct = struct();
 % loop over events
 for i_event = 1 : length(event_name_list)
 	event_name = event_name_list{i_event};
@@ -132,7 +149,9 @@ for i_event = 1 : length(event_name_list)
 	[unique_instances, ~, instance_ID_by_trial] = unique(TrialInfo_struct.cur_raster_labels.TrialSubType_list);
 
 	% here we are telling it to give us e.g. only the dyadic sessions
-	trialsubtypes.Dyadic_idx = find(instance_ID_by_trial == find(ismember(unique_instances, {'Dyadic'})));
+	if ismember('Dyadic', unique_instances)
+		trialsubtypes.Dyadic_idx = find(instance_ID_by_trial == find(ismember(unique_instances, {'Dyadic'})));
+	end
 	if ismember('SoloARewardAB', unique_instances)
 		trialsubtypes.SoloARewardAB_idx = find(instance_ID_by_trial == find(ismember(unique_instances, {'SoloARewardAB'})));
 	end
@@ -179,15 +198,7 @@ for i_event = 1 : length(event_name_list)
 	column_split_struct = action_sequences;
 	column_name_list = fieldnames(column_split_struct);
 	n_cols = length(column_name_list);
-	n_rows = 2; % plot Y over X
-	row_datasource_suffix_list = {'_resampled_registered_Y', '_resampled_registered_X'};
-	lines_for_X = [802, 849, 960 1072, 1119];
-	lines_for_Y = [450, 550, 612, 389, 500];
-	helper_lines_by_row = {lines_for_Y, lines_for_X};
-	YLim_by_row = {[(389-200) (612+200)], [(960-200) (960+200)]};
-	Y_label_by_row = {'Y position [pixel]', 'X position [pixel]'};
-	plot_width_cm = (plotting_options.panel_width_cm * n_cols);
-	plot_height_cm = (plotting_options.panel_height_cm * n_rows);
+
 
 	% 	my_colors.RightEyeX_B_left = [1 0 0];
 	% 	my_colors.RightEyeX_B_right = [0 1 0];
@@ -207,6 +218,30 @@ for i_event = 1 : length(event_name_list)
 
 		for i_datasource = 1 : length(datasource_prefix_list)
 			cur_datasource_prefix = datasource_prefix_list{i_datasource};
+			
+			% also show vergence...
+			if strcmp(cur_datasource_prefix, 'BINOCCULAR_RAW') && ismember({'BINOCCULAR_RAW_resampled_registered_ABDepthPix'}, datasource_names)
+				n_rows = 3; % plot Y over X
+				row_datasource_suffix_list = {'_resampled_registered_Y', '_resampled_registered_X', '_resampled_registered_ABDepthPix'};
+				lines_for_X = [802, 849, 960 1072, 1119];
+				lines_for_Y = [450, 550, 612, 389, 500];
+				lines_for_Depth = [-50, -27.8, 0 27.8, 50];
+				helper_lines_by_row = {lines_for_Y, lines_for_X, lines_for_Depth};
+				YLim_by_row = {[(389-200) (612+200)], [(960-200) (960+200)], [(-60) (60)]};
+				Y_label_by_row = {'Y position [pixel]', 'X position [pixel]', 'XYdiff +B/-A[pixel]'};
+				plot_width_cm = (plotting_options.panel_width_cm * n_cols);
+				plot_height_cm = (plotting_options.panel_height_cm * n_rows);
+			else
+				n_rows = 2; % plot Y over X
+				row_datasource_suffix_list = {'_resampled_registered_Y', '_resampled_registered_X'};
+				lines_for_X = [802, 849, 960 1072, 1119];
+				lines_for_Y = [450, 550, 612, 389, 500];
+				helper_lines_by_row = {lines_for_Y, lines_for_X};
+				YLim_by_row = {[(389-200) (612+200)], [(960-200) (960+200)]};
+				Y_label_by_row = {'Y position [pixel]', 'X position [pixel]'};
+				plot_width_cm = (plotting_options.panel_width_cm * n_cols);
+				plot_height_cm = (plotting_options.panel_height_cm * n_rows);
+			end
 
 			out_name = [subject_name, '_', event_name, '_', cur_trialsubtype,'_', cur_datasource_prefix, '_A'];
 			cur_fh = figure('Name', out_name, 'Visible', plotting_options.figure_visibility_string);
@@ -219,15 +254,20 @@ for i_event = 1 : length(event_name_list)
 					row_offset = n_cols * (i_row - 1);
 					nexttile(i_colum + row_offset);
 
+					
 					current_column_name = column_name_list{i_colum};
 					current_column_idx = column_split_struct.(current_column_name);
 					included_trials_idx =  intersect(current_column_idx, cur_trailsubtype_idx);
 
-					ah = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-						intersect(included_trials_idx, Al_trial_idx), helper_lines_by_row{i_row}, [0], colors.Al);
+					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Al.data] = ...
+						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Al_trial_idx), helper_lines_by_row{i_row}, [0], colors.Al, ci_alpha);
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Al.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
 					legend_text(end+1) = {'by Al'};
-					ah = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-						intersect(included_trials_idx, Ar_trial_idx), helper_lines_by_row{i_row}, [0], colors.Ar);
+					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Ar.data] = ...
+						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Ar_trial_idx), helper_lines_by_row{i_row}, [0], colors.Ar, ci_alpha);
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Ar.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
 					legend_text(end+1) = {'by Ar'};
 					% set(ah, 'YDir', 'reverse');
 					title([current_column_name, ' ', cur_datasource_prefix,'; Al/Ar'], 'Interpreter', 'none', 'Fontsize', 14);
@@ -259,11 +299,15 @@ for i_event = 1 : length(event_name_list)
 					current_column_idx = column_split_struct.(current_column_name);
 					included_trials_idx =  intersect(current_column_idx, cur_trailsubtype_idx);
 
-					ah = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-						intersect(included_trials_idx, Bl_trial_idx), helper_lines_by_row{i_row}, [0], colors.Bl);
+					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Bl.data] = ...
+						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Bl_trial_idx), helper_lines_by_row{i_row}, [0], colors.Bl, ci_alpha);
+							stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Bl.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
 					legend_text(end+1) = {'by Bl'};
-					ah = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-						intersect(included_trials_idx, Br_trial_idx), helper_lines_by_row{i_row}, [0], colors.Br);
+					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Br.data] = ...
+						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Br_trial_idx), helper_lines_by_row{i_row}, [0], colors.Br, ci_alpha);
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Br.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
 					legend_text(end+1) = {'by Br'};
 					% set(ah, 'YDir', 'reverse');
 					title([current_column_name, ' ', cur_datasource_prefix,'; Bl/Br'], 'Interpreter', 'none', 'Fontsize', 14);
@@ -280,18 +324,32 @@ for i_event = 1 : length(event_name_list)
 		end % i_datasource
 	end % i_trialsubtype
 end % i_event
-return
+
+% save the collected stat struct...
+cur_stat_struct_name = [session_ID, '.GAZE.statistic_summary.mat'];
+cur_stat_struct_name_fqn = fullfile(data_basedir, cur_stat_struct_name);
+disp([mfilename, ': saving collected statistics as ', cur_stat_struct_name, '; ', cur_stat_struct_name_fqn]);
+save(cur_stat_struct_name_fqn, 'stat_struct');
+
+
 
 if (InvisibleFigures)
 	close all;
 end
 
+% clean up
+timestamps.(mfilename).end = toc(timestamps.(mfilename).start);
+disp([mfilename, ' took: ', num2str(timestamps.(mfilename).end), ' seconds.']);
+disp([mfilename, ' took: ', num2str(timestamps.(mfilename).end / 60), ' minutes.']);
+disp([mfilename, ' took: ', num2str(timestamps.(mfilename).end / (60 * 60)), ' hours.']);
+disp([mfilename, ' took: ', num2str(timestamps.(mfilename).end / (60 * 60 * 24)), ' days. Done...']);
+ 
 return
 end
 
 
-function [ah] = plot_data( x_vec, data_table, good_trial_idx, ylines, xlines, cur_color )
-ah = gca;
+function [cur_ah, summary_stat_struct] = plot_data( x_vec, data_table, good_trial_idx, ylines, xlines, cur_color, ci_alpha )
+cur_ah = gca;
 hold on
 for i_row = 1 : length(good_trial_idx)
 	cur_row = good_trial_idx(i_row);
@@ -305,8 +363,20 @@ for i_xlines = 1 : length(xlines)
 	xline(xlines(i_xlines));
 end
 
-mean_data = mean(data_table(good_trial_idx, :), 'omitnan');
-plot(x_vec, mean_data, 'Color', cur_color, 'linewidth', 2);
+% set(gcf, 'Visible', 'on');
+[summary_stat_struct] = fn_calc_summary_stats(data_table(good_trial_idx, :), ci_alpha, 1, 'omitnan');
+if ~isempty(ci_alpha)
+	% plot the CI
+	inverse_index = (length(x_vec):-1:1);
+	current_x_vec_patch = [x_vec, x_vec(inverse_index)];
+	tmp_upper_ci = (summary_stat_struct.mean + summary_stat_struct.ci_halfwidth);
+	tmp_lower_ci = (summary_stat_struct.mean - summary_stat_struct.ci_halfwidth);
+	% the confidence intervals as transparent patch...
+	patch(cur_ah, 'XData', current_x_vec_patch, 'YData', [tmp_upper_ci, tmp_lower_ci(inverse_index)], 'FaceColor', cur_color, 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+end
+
+%mean_data = mean(data_table(good_trial_idx, :), 'omitnan');
+plot(x_vec, summary_stat_struct.mean, 'Color', cur_color, 'linewidth', 2);
 
 hold off
 
