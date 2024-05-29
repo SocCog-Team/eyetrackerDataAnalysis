@@ -4,6 +4,11 @@ function [ out_gaze_data_struct ] = fn_apply_GAZEREG_to_gaze_data( gaze_data_str
 
 out_gaze_data_struct = gaze_data_struct;
 
+if isempty(gaze_data_struct.data)
+	disp([mfilename, ': gaze_data_struct contains no data, skipping...']);
+	return
+end
+
 tracker_type = [];
 if ~isempty(regexpi(gaze_data_struct.info.tracker_name_from_filename, 'eyelink'))
 	tracker_type = 'eyelink';
