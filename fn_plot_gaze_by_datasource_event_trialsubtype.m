@@ -1,4 +1,4 @@
-function [] = fn_plot_gaze_by_datasource_event_trialsubtype( session_ID, event_name_list, subject_name, trackertype, data_basedir, InvisibleFigures )
+function [ cur_stat_table_name_fqn ] = fn_plot_gaze_by_datasource_event_trialsubtype( session_ID, event_name_list, subject_name, side_ID, trackertype, data_basedir, InvisibleFigures )
 
 %this is the directory to get to the data files. we use fullfile so it will
 %add the correct slash independent of computer. even name is changed with
@@ -33,7 +33,7 @@ plotting_options.panel_width_cm = 15;
 plotting_options.panel_height_cm = 12;
 plotting_options.margin_cm = 1;
 ci_alpha = 0.05;
-
+transparency = 0.1;
 
 % colors for side choices as objective Sides (from perspective of A)
 % these work, but are pretty garish...
@@ -47,11 +47,22 @@ colors.Ar = [94,60,153]/255;% purple
 colors.Bl = [166,97,26]/255;% brown/beige
 colors.Br = [1,133,113]/255;% tan/teal greenish
 
+% switch from assigning colors by side to assigning colors by ownership
+colors.OwnLeft = [230,97,1]/255;		% orange
+colors.OwnRight = [94,60,153]/255;		% purple
+colors.OthersLeft = [166,97,26]/255;	% brown/beige
+colors.OthersRight = [1,133,113]/255;	% tan/teal greenish
+
+
+
 
 if ~exist('session_ID', 'var') || isempty(session_ID)
 	session_ID = '20230623T124557.A_Curius.B_Elmo.SCP_01';
-	session_ID = '20210423T105645.A_Elmo.B_KN.SCP_01';
+	%session_ID = '20210423T105645.A_Elmo.B_KN.SCP_01';
 end
+
+sanitized_session_id = fn_sanitize_string_as_matlab_variable_name(['SID_', session_ID]);
+
 
 if ~exist('event_name_list', 'var') || isempty(event_name_list)
 	% 'A_TargetOnsetTime_ms', 'A_GoSignalTime_ms', 'B_GoSignalTime_ms', 	'A_InitialFixationReleaseTime_ms', 'B_InitialFixationReleaseTime_ms','A_TargetTouchTime_ms', 'B_TargetTouchTime_ms'
@@ -84,6 +95,10 @@ if isempty(side_string)
 	error([mfilename, ': Requested subject name does not exist in this session:', subject_name]);
 end
 
+if ~exist('side_ID', 'var') || isempty(side_ID)
+	side_ID = side_string;
+end
+
 
 if ~exist('data_basedir', 'var') || isempty(data_basedir)
 	data_basedir = fullfile('Y:', 'SCP_DATA', 'SCP-CTRL-01', 'SESSIONLOGS', session_info.year_string, session_info.YYMMDD_string, [session_ID, '.sessiondir'], 'GAZE_TOUCH');
@@ -92,7 +107,37 @@ if ~exist('data_basedir', 'var') || isempty(data_basedir)
 	end
 end
 
+% flip these around so colors are relative to each agent
+switch side_ID
+	case 'A'
+		colors.Al = colors.OwnLeft;
+		colors.Ar = colors.OwnRight;
+		colors.Bl = colors.OthersLeft;
+		colors.Br = colors.OthersRight;
+		by_side_action.Al = 'OwnLeft';	
+		by_side_action.Ar = 'OwnRight';	
+		by_side_action.Bl = 'OthersLeft';	
+		by_side_action.Br = 'OthersRight';	
+	case 'B'
+		colors.Bl = colors.OwnLeft;
+		colors.Br = colors.OwnRight;
+		colors.Al = colors.OthersLeft;
+		colors.Ar = colors.OthersRight;
+		by_side_action.Bl = 'OwnLeft';	
+		by_side_action.Br = 'OwnRight';	
+		by_side_action.Al = 'OthersLeft';	
+		by_side_action.Ar = 'OthersRight';	
+end
+
+
+
+% stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).(current_column_name).by_Ar.data
 stat_struct = struct();
+% create s truct that can be easily translated into a table...
+stat_table_struct = struct('session_id', '', 'subject', '', 'side', '', 'sanitized_session_id', '', 'alignment_event', '', 'trialsubtype', '', 'datasource', '', 'action_timing', '', 'sorted_by_action', '', 'stat_struct', struct());
+
+
+
 % loop over events
 for i_event = 1 : length(event_name_list)
 	event_name = event_name_list{i_event};
@@ -192,6 +237,8 @@ for i_event = 1 : length(event_name_list)
 
 
 
+
+
 	%TODO
 	% plot a tiledplot with:
 	% columns different
@@ -248,27 +295,36 @@ for i_event = 1 : length(event_name_list)
 			output_rect = fn_set_figure_outputpos_and_size(cur_fh, plotting_options.margin_cm, plotting_options.margin_cm, plot_width_cm, plot_height_cm, 1.0, 'portrait', 'inch');
 			cur_th = tiledlayout(cur_fh, n_rows, n_cols);
 
-			for i_colum = 1 : length(column_name_list)
-				legend_text = {};
+			for i_column = 1 : length(column_name_list)
+				%legend_text = {};
+				%legend_objects = [];
 				for i_row = 1 : n_rows
+					legend_text = {};
+					legend_objects = [];
 					row_offset = n_cols * (i_row - 1);
-					nexttile(i_colum + row_offset);
-
+					nexttile(i_column + row_offset);
 					
-					current_column_name = column_name_list{i_colum};
+					current_column_name = column_name_list{i_column};
 					current_column_idx = column_split_struct.(current_column_name);
 					included_trials_idx =  intersect(current_column_idx, cur_trailsubtype_idx);
 
-					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Al.data] = ...
-						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-							intersect(included_trials_idx, Al_trial_idx), helper_lines_by_row{i_row}, [0], colors.Al, ci_alpha);
-					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Al.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
-					legend_text(end+1) = {'by Al'};
-					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Ar.data] = ...
-						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-							intersect(included_trials_idx, Ar_trial_idx), helper_lines_by_row{i_row}, [0], colors.Ar, ci_alpha);
-					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Ar.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
-					legend_text(end+1) = {'by Ar'};
+					[ah, cur_stat_struct, legend_objects(end+1)]  = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Al_trial_idx), helper_lines_by_row{i_row}, [0], colors.Al, ci_alpha, transparency, by_side_action.Al);
+
+					%legend_text(end+1) = {by_side_action.Al};
+					cur_stat_struct.realtive_x_time_ms = cur_PETH_struct.info.realtive_x_time_ms';
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).(current_column_name).(by_side_action.Al).data = cur_stat_struct;
+					stat_table_struct(end+1) = struct('session_id', session_ID, 'subject', subject_name, 'side', side_ID, 'sanitized_session_id', sanitized_session_id, 'alignment_event', event_name, 'trialsubtype', cur_trialsubtype, 'datasource', [cur_datasource_prefix, row_datasource_suffix_list{i_row}], 'action_timing', current_column_name, 'sorted_by_action', by_side_action.Al, 'stat_struct', cur_stat_struct);	
+
+					
+					[ah, cur_stat_struct, legend_objects(end+1)] = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Ar_trial_idx), helper_lines_by_row{i_row}, [0], colors.Ar, ci_alpha, transparency, by_side_action.Ar);
+
+					%legend_text(end+1) = {by_side_action.Ar};
+					cur_stat_struct.realtive_x_time_ms = cur_PETH_struct.info.realtive_x_time_ms';
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).(current_column_name).(by_side_action.Ar).data = cur_stat_struct;
+					stat_table_struct(end+1) = struct('session_id', session_ID, 'subject', subject_name, 'side', side_ID, 'sanitized_session_id', sanitized_session_id, 'alignment_event', event_name, 'trialsubtype', cur_trialsubtype, 'datasource', [cur_datasource_prefix, row_datasource_suffix_list{i_row}], 'action_timing', current_column_name, 'sorted_by_action', by_side_action.Ar, 'stat_struct', cur_stat_struct);
+				
 					% set(ah, 'YDir', 'reverse');
 					title([current_column_name, ' ', cur_datasource_prefix,'; Al/Ar'], 'Interpreter', 'none', 'Fontsize', 14);
 					%title ([subject_name, ' ' , event_name], 'Interpreter', 'none')
@@ -276,7 +332,11 @@ for i_event = 1 : length(event_name_list)
 					xlabel('Time');
 					ylabel(Y_label_by_row{i_row});
 					set(gca, 'YLim', YLim_by_row{i_row});
-					%legend(legend_text,'Orientation','horizontal', 'Location', 'north');
+					
+					if (i_column == 1) && (i_row == 1)
+						lh = legend(legend_objects, legend_text,'Orientation','horizontal', 'Location', 'north', 'box', 'off');
+						%lh.ItemTokenSize=[10,15];
+					end
 				end
 			end
 			disp([mfilename, ': saving figure to ', fullfile(data_basedir, event_name, [out_name, output_format_string])]);
@@ -289,26 +349,36 @@ for i_event = 1 : length(event_name_list)
 
 			cur_th = tiledlayout(cur_fh, n_rows, n_cols);
 
-			for i_colum = 1 : length(column_name_list)
-				legend_text = {};
+			for i_column = 1 : length(column_name_list)
+				%legend_text = {};
+				%legend_objects = [];
 				for i_row = 1 : n_rows
+					legend_text = {};
+					legend_objects = [];
 					row_offset = n_cols * (i_row - 1);
-					nexttile(i_colum + row_offset);
+					nexttile(i_column + row_offset);
 
-					current_column_name = column_name_list{i_colum};
+					current_column_name = column_name_list{i_column};
 					current_column_idx = column_split_struct.(current_column_name);
 					included_trials_idx =  intersect(current_column_idx, cur_trailsubtype_idx);
 
-					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Bl.data] = ...
-						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-							intersect(included_trials_idx, Bl_trial_idx), helper_lines_by_row{i_row}, [0], colors.Bl, ci_alpha);
-							stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Bl.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
-					legend_text(end+1) = {'by Bl'};
-					[ah, stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Br.data] = ...
-						plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
-							intersect(included_trials_idx, Br_trial_idx), helper_lines_by_row{i_row}, [0], colors.Br, ci_alpha);
-					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).by_Br.x_vec_ms = cur_PETH_struct.info.realtive_x_time_ms;
-					legend_text(end+1) = {'by Br'};
+					[ah, cur_stat_struct, legend_objects(end+1)] = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Bl_trial_idx), helper_lines_by_row{i_row}, [0], colors.Bl, ci_alpha, transparency, by_side_action.Bl);
+
+					%legend_text(end+1) = {by_side_action.Bl};
+					cur_stat_struct.realtive_x_time_ms = cur_PETH_struct.info.realtive_x_time_ms';
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).(current_column_name).(by_side_action.Bl).data = cur_stat_struct;
+					stat_table_struct(end+1) = struct('session_id', session_ID, 'subject', subject_name, 'side', side_ID, 'sanitized_session_id', sanitized_session_id, 'alignment_event', event_name, 'trialsubtype', cur_trialsubtype, 'datasource', [cur_datasource_prefix, row_datasource_suffix_list{i_row}], 'action_timing', current_column_name, 'sorted_by_action', by_side_action.Bl, 'stat_struct', cur_stat_struct);
+
+
+					[ah, cur_stat_struct, legend_objects(end+1)] = plot_data( cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.([cur_datasource_prefix, row_datasource_suffix_list{i_row}]), ...
+							intersect(included_trials_idx, Br_trial_idx), helper_lines_by_row{i_row}, [0], colors.Br, ci_alpha, transparency, by_side_action.Br);
+
+					%legend_text(end+1) = {by_side_action.Br};
+					cur_stat_struct.realtive_x_time_ms = cur_PETH_struct.info.realtive_x_time_ms';
+					stat_struct.(event_name).(cur_trialsubtype).([cur_datasource_prefix, row_datasource_suffix_list{i_row}]).(current_column_name).(by_side_action.Br).data = cur_stat_struct;
+					stat_table_struct(end+1) = struct('session_id', session_ID, 'subject', subject_name, 'side', side_ID, 'sanitized_session_id', sanitized_session_id, 'alignment_event', event_name, 'trialsubtype', cur_trialsubtype, 'datasource', [cur_datasource_prefix, row_datasource_suffix_list{i_row}], 'action_timing', current_column_name, 'sorted_by_action', by_side_action.Br, 'stat_struct', cur_stat_struct);
+
 					% set(ah, 'YDir', 'reverse');
 					title([current_column_name, ' ', cur_datasource_prefix,'; Bl/Br'], 'Interpreter', 'none', 'Fontsize', 14);
 					%title ([subject_name, ' ' , event_name], 'Interpreter', 'none')
@@ -316,20 +386,43 @@ for i_event = 1 : length(event_name_list)
 					xlabel('Time');
 					ylabel(Y_label_by_row{i_row});
 					set(gca, 'YLim', YLim_by_row{i_row});
-					%legend(legend_text,'Orientation','horizontal', 'Location', 'north');
+					if (i_column == 1) && (i_row == 1)
+						lh = legend(legend_objects, legend_text,'Orientation','horizontal', 'Location', 'north', 'box', 'off');
+						lh.ItemTokenSize=[10,15];
+					end
 				end
 			end
 			disp([mfilename, ': saving figure to ', fullfile(data_basedir, event_name, [out_name, output_format_string])]);
 			write_out_figure(cur_fh, fullfile(data_basedir, event_name, [out_name, output_format_string]));
 		end % i_datasource
+		if (InvisibleFigures)
+			close all;
+		end
 	end % i_trialsubtype
+
+	if (InvisibleFigures)
+		close all;
+	end
 end % i_event
 
+% remove the empty first line
+if isempty(stat_table_struct(1).session_id)
+	stat_table_struct(1) = [];
+end
+
 % save the collected stat struct...
-cur_stat_struct_name = [session_ID, '.GAZE.statistic_summary.mat'];
+cur_stat_struct_name = ['GAZE.', session_ID, '.', subject_name, '.', side_ID, '.statistic_summary.mat'];
 cur_stat_struct_name_fqn = fullfile(data_basedir, cur_stat_struct_name);
 disp([mfilename, ': saving collected statistics as ', cur_stat_struct_name, '; ', cur_stat_struct_name_fqn]);
-save(cur_stat_struct_name_fqn, 'stat_struct');
+save(cur_stat_struct_name_fqn, 'stat_struct', 'stat_table_struct');
+
+
+% save the collected stat table...
+cur_stat_table = struct2table(stat_table_struct);
+cur_stat_table_name = ['GAZE.', session_ID, '.', subject_name, '.', side_ID, '.statistic_summary_table.mat'];
+cur_stat_table_name_fqn = fullfile(data_basedir, cur_stat_table_name);
+disp([mfilename, ': saving collected statistics as ', cur_stat_table_name, '; ', cur_stat_table_name_fqn]);
+save(cur_stat_table_name_fqn, 'cur_stat_table');
 
 
 
@@ -348,19 +441,21 @@ return
 end
 
 
-function [cur_ah, summary_stat_struct] = plot_data( x_vec, data_table, good_trial_idx, ylines, xlines, cur_color, ci_alpha )
+function [cur_ah, summary_stat_struct, legend_object] = plot_data( x_vec, data_table, good_trial_idx, ylines, xlines, cur_color, ci_alpha, transparency, legend_name )
 cur_ah = gca;
 hold on
+handles = [];
 for i_row = 1 : length(good_trial_idx)
 	cur_row = good_trial_idx(i_row);
-	patchline(x_vec, data_table(cur_row, :), 'edgecolor', cur_color, 'linewidth', 1, 'edgealpha', 0.05);
+	p = patchline(x_vec, data_table(cur_row, :), 'edgecolor', cur_color, 'linewidth', 1, 'edgealpha', transparency);
 	%plot(cur_PETH_struct.info.realtive_x_time_ms, cur_PETH_struct.data.RIGHT_EYE_RAW_resampled_registered_X(cur_row, :))
+	%p.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 for i_ylines = 1 : length(ylines)
-	yline(ylines(i_ylines));
+	yl = yline(ylines(i_ylines));
 end
 for i_xlines = 1 : length(xlines)
-	xline(xlines(i_xlines));
+	xl = xline(xlines(i_xlines));
 end
 
 % set(gcf, 'Visible', 'on');
@@ -372,11 +467,13 @@ if ~isempty(ci_alpha)
 	tmp_upper_ci = (summary_stat_struct.mean + summary_stat_struct.ci_halfwidth);
 	tmp_lower_ci = (summary_stat_struct.mean - summary_stat_struct.ci_halfwidth);
 	% the confidence intervals as transparent patch...
-	patch(cur_ah, 'XData', current_x_vec_patch, 'YData', [tmp_upper_ci, tmp_lower_ci(inverse_index)], 'FaceColor', cur_color, 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+	p = patch(cur_ah, 'XData', current_x_vec_patch, 'YData', [tmp_upper_ci, tmp_lower_ci(inverse_index)], 'FaceColor', cur_color, 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+	%p.Annotation.LegendInformation.IconDisplayStyle = 'off';
 end
 
 %mean_data = mean(data_table(good_trial_idx, :), 'omitnan');
-plot(x_vec, summary_stat_struct.mean, 'Color', cur_color, 'linewidth', 2);
+legend_object = plot(x_vec, summary_stat_struct.mean, 'Color', cur_color, 'linewidth', 2, 'DisplayName', legend_name);
+
 
 hold off
 
